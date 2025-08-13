@@ -8,8 +8,8 @@ function Home() {
           Welcome to Unholy Souls MC
         </h1>
         <img 
-          src='https://i.imgur.com/ZRQ9NtS.png' 
-          alt="Top 9" 
+          src='https://i.imgur.com/2cZtQxl.png' 
+          alt="Club Ride" 
           className="rounded-lg mx-auto pb-6 sm:pb-10 w-full max-w-2xl h-auto" 
         />
         <h2 className="text-xl sm:text-2xl font-bold text-center shadow-md mt-4 sm:mt-5 mb-4 sm:mb-5 border-b-4 border-amber-600 w-fit mx-auto px-4">

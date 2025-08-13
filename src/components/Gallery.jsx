@@ -5,6 +5,8 @@ function Gallery() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredImages, setFilteredImages] = useState(imageDatabase);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Filter and search images
   const handleFilter = () => {
@@ -43,6 +45,71 @@ function Gallery() {
     setSearchTerm("");
     setFilteredImages(imageDatabase);
   };
+
+  // Open modal with selected image
+  const openModal = (image) => {
+    setSelectedImage(image);
+    setIsModalOpen(true);
+  };
+
+  // Close modal
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedImage(null);
+  };
+
+  // Close modal on escape key
+  React.useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        closeModal();
+      }
+    };
+
+    if (isModalOpen) {
+      document.addEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isModalOpen]);
+
+  // Navigate to next image
+  const nextImage = () => {
+    if (!selectedImage) return;
+    
+    const currentIndex = filteredImages.findIndex(img => img.id === selectedImage.id);
+    const nextIndex = (currentIndex + 1) % filteredImages.length;
+    setSelectedImage(filteredImages[nextIndex]);
+  };
+
+  // Navigate to previous image
+  const previousImage = () => {
+    if (!selectedImage) return;
+    
+    const currentIndex = filteredImages.findIndex(img => img.id === selectedImage.id);
+    const prevIndex = currentIndex === 0 ? filteredImages.length - 1 : currentIndex - 1;
+    setSelectedImage(filteredImages[prevIndex]);
+  };
+
+  // Handle arrow key navigation
+  React.useEffect(() => {
+    const handleArrowKeys = (e) => {
+      if (!isModalOpen) return;
+      
+      if (e.key === 'ArrowRight') {
+        nextImage();
+      } else if (e.key === 'ArrowLeft') {
+        previousImage();
+      }
+    };
+
+    document.addEventListener('keydown', handleArrowKeys);
+    return () => document.removeEventListener('keydown', handleArrowKeys);
+  }, [isModalOpen, selectedImage, filteredImages]);
 
   return (
     <div className="min-h-screen py-8 sm:py-12 px-4 sm:px-6 lg:px-8 pt-30 sm:pt-32">
@@ -157,7 +224,11 @@ function Gallery() {
         {filteredImages.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {filteredImages.map((image) => (
-              <div key={image.id} className="bg-white/5 rounded-lg overflow-hidden border border-amber-500/20 hover:border-amber-500/50 transition-all duration-300">
+              <div 
+                key={image.id} 
+                className="bg-white/5 rounded-lg overflow-hidden border border-amber-500/20 hover:border-amber-500/50 transition-all duration-300 cursor-pointer"
+                onClick={() => openModal(image)}
+              >
                 {/* Image */}
                 <div className="relative overflow-hidden">
                   <img
@@ -253,6 +324,77 @@ function Gallery() {
           </div>
         )}
       </div>
+
+      {/* Image Modal */}
+      {isModalOpen && selectedImage && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-gray-800/95 rounded-2xl border border-amber-500/50 shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex justify-between items-start p-6 border-b border-gray-700/50">
+              <h2 className="text-2xl sm:text-3xl font-bold text-white">{selectedImage.title}</h2>
+              
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6">
+              {/* Image with Navigation Arrows */}
+              <div className="relative mb-6">
+                {/* Previous Arrow */}
+                <button
+                  onClick={previousImage}
+                  className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-amber-600 p-3 rounded-full transition-all duration-200 z-10 hover:scale-110"
+                  aria-label="Previous image"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+
+                {/* Next Arrow */}
+                <button
+                  onClick={nextImage}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-amber-600 p-3 rounded-full transition-all duration-200 z-10 hover:scale-110"
+                  aria-label="Next image"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+
+                {/* Image */}
+                <img
+                  src={selectedImage.imageUrl}
+                  alt={selectedImage.title}
+                  className="w-full h-auto max-h-96 object-contain rounded-lg border border-gray-600/50"
+                />
+              </div>
+
+              {/* Description */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-amber-600 mb-3">Description</h3>
+                <p className="text-amber-600 text-base leading-relaxed">{selectedImage.description}</p>
+              </div>
+
+              {/* Navigation Indicator */}
+              <div className="flex items-center justify-center space-x-2 mb-4">
+                <span className="text-sm text-gray-400">
+                  {filteredImages.findIndex(img => img.id === selectedImage.id) + 1} of {filteredImages.length}
+                </span>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex justify-end p-6 border-t border-gray-700/50">
+              <button
+                onClick={closeModal}
+                className="px-6 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-colors duration-200 font-medium"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

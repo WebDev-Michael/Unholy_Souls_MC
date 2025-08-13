@@ -2,6 +2,13 @@ import React from "react";
 import { Link } from "react-router-dom";
 
 function Footer() {
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
   return (
     <>
       <div className="bg-gray-700/80 rounded-md shadow-md mt-8 sm:mt-12 mb-4 mx-4 sm:mx-6 lg:mx-8">
@@ -10,13 +17,25 @@ function Footer() {
         </p>
         <div className="flex justify-center items-center">
           <nav className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-6 pb-2 px-4">
-            <Link to="/" className="text-white hover:text-amber-400 transition-colors duration-200 text-center">
+            <Link 
+              to="/" 
+              className="text-white hover:text-amber-400 transition-colors duration-200 text-center cursor-pointer"
+              onClick={scrollToTop}
+            >
               Home
             </Link>
-            <Link to="/meetthesouls" className="text-white hover:text-amber-400 transition-colors duration-200 text-center">
+            <Link 
+              to="/meetthesouls" 
+              className="text-white hover:text-amber-400 transition-colors duration-200 text-center cursor-pointer"
+              onClick={scrollToTop}
+            >
               Meet the Souls
             </Link>
-            <Link to="/gallery" className="text-white hover:text-amber-400 transition-colors duration-200 text-center">
+            <Link 
+              to="/gallery" 
+              className="text-white hover:text-amber-400 transition-colors duration-200 text-center cursor-pointer"
+              onClick={scrollToTop}
+            >
               Gallery
             </Link>
           </nav>
