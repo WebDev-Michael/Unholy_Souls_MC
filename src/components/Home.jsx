@@ -1,6 +1,4 @@
 import React from "react";
-// import top9 from "../assets/images/top9.png";
-import hero from "../assets/images/heroImage.png";
 
 function Home() {
   return (
@@ -9,7 +7,7 @@ function Home() {
         <h1 className="text-4xl font-bold text-center mb-5 border-b-4 border-amber-600 w-fit mx-auto">
           Welcome to Unholy Souls MC
         </h1>
-        <img src={hero} alt="Top 9" className="rounded-lg mx-auto pb-10" />
+        <img src='https://cdn.discordapp.com/attachments/1166933227148165201/1405303221232341143/image.png?ex=689e561d&is=689d049d&hm=0586490fcb8b4030c0a757fc38fb1d8fe524c06bb1a89dded80396d29a5b9f07&' alt="Top 9" className="rounded-lg mx-auto pb-10" />
         <h2 className="text-2xl font-bold text-center shadow-md mt-5 mb-5 border-b-4 border-amber-600 w-fit mx-auto">
           Who are we?
         </h2>
