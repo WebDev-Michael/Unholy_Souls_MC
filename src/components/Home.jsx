@@ -60,7 +60,7 @@ function Home() {
         <div className="pt-5 w-3/4 mx-auto bg-gray-600/60 rounded-lg p-5 border-l-4 border-r-4 border-amber-600">
           <p>
             If you think you have what it takes to be a part of a 1% MC in a
-            fact-paced city, approach a member of the club and let them know you
+            fast-paced city, approach a member of the club and let them know you
             would like a meeting.
           </p>
 

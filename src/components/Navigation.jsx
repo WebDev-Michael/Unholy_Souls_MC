@@ -12,9 +12,6 @@ function Navigation() {
             </div>
             <nav className="flex space-x-6 pr-5"> 
               <Link to="/" className="hover:text-gray-600">Home</Link>
-              <Link to="/about" className="hover:text-gray-600">About</Link>
-              <Link to="/cities" className="hover:text-gray-600">Cities</Link>
-              <Link to="/rules" className="hover:text-gray-600">Rules</Link>
               <Link to="/meetthesouls" className="hover:text-gray-600">Meet the Souls</Link>
               <Link to="/gallery" className="hover:text-gray-600">Gallery</Link>
             </nav>
