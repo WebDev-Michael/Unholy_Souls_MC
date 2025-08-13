@@ -45,14 +45,14 @@ function Gallery() {
   };
 
   return (
-    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen py-8 sm:py-12 px-4 sm:px-6 lg:px-8 pt-30 sm:pt-32">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-gradient-to-br from-gray-900/50 via-gray-800/50 to-black/50 rounded-2xl border border-amber-500/30 p-12 shadow-2xl mb-8">
-          <div className="mb-8">
-            <div className="w-24 h-24 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center mx-auto shadow-lg">
+        <div className="bg-gradient-to-br from-gray-900/50 via-gray-800/50 to-black/50 rounded-2xl border border-amber-500/30 p-6 sm:p-8 lg:p-12 shadow-2xl mb-6 sm:mb-8">
+          <div className="mb-6 sm:mb-8">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center mx-auto shadow-lg">
               <svg
-                className="w-12 h-12 text-white"
+                className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-white"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -65,50 +65,50 @@ function Gallery() {
             </div>
           </div>
 
-          <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 tracking-tight text-center">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 sm:mb-6 tracking-tight text-center">
             Gallery
           </h1>
 
-          <p className="text-xl md:text-2xl text-amber-300 mb-8 font-medium text-center">
+          <p className="text-lg sm:text-xl md:text-2xl text-amber-300 mb-6 sm:mb-8 font-medium text-center">
             Unholy Souls MC Memories
           </p>
 
-          <p className="text-lg text-gray-300 mb-10 leading-relaxed max-w-3xl mx-auto text-center">
+          <p className="text-base sm:text-lg text-gray-300 mb-8 sm:mb-10 leading-relaxed max-w-3xl mx-auto text-center px-4">
             Explore our collection of photos and memories from the Unholy Souls MC. 
             From epic rides to unforgettable brotherhood moments, every image tells a story.
           </p>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-            <div className="bg-white/5 rounded-lg p-4 border border-amber-500/20">
-              <div className="text-2xl font-bold text-amber-400">{imageDatabase.length}</div>
-              <div className="text-gray-400 text-sm">Total Images</div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 text-center">
+            <div className="bg-white/5 rounded-lg p-3 sm:p-4 border border-amber-500/20">
+              <div className="text-xl sm:text-2xl font-bold text-amber-400">{imageDatabase.length}</div>
+              <div className="text-gray-400 text-xs sm:text-sm">Total Images</div>
             </div>
-            <div className="bg-white/5 rounded-lg p-4 border border-amber-500/20">
-              <div className="text-2xl font-bold text-amber-400">{categories.length - 1}</div>
-              <div className="text-gray-400 text-sm">Categories</div>
+            <div className="bg-white/5 rounded-lg p-3 sm:p-4 border border-amber-500/20">
+              <div className="text-xl sm:text-2xl font-bold text-amber-400">{categories.length - 1}</div>
+              <div className="text-gray-400 text-xs sm:text-sm">Categories</div>
             </div>
-            <div className="bg-white/5 rounded-lg p-4 border border-amber-500/20">
-              <div className="text-2xl font-bold text-amber-400">{imageDatabase.filter(img => img.featured).length}</div>
-              <div className="text-gray-400 text-sm">Featured</div>
+            <div className="bg-white/5 rounded-lg p-3 sm:p-4 border border-amber-500/20">
+              <div className="text-xl sm:text-2xl font-bold text-amber-400">{imageDatabase.filter(img => img.featured).length}</div>
+              <div className="text-gray-400 text-xs sm:text-sm">Featured</div>
             </div>
-            <div className="bg-white/5 rounded-lg p-4 border border-amber-500/20">
-              <div className="text-2xl font-bold text-amber-400">{new Set(imageDatabase.flatMap(img => img.tags)).size}</div>
-              <div className="text-gray-400 text-sm">Unique Tags</div>
+            <div className="bg-white/5 rounded-lg p-3 sm:p-4 border border-amber-500/20">
+              <div className="text-xl sm:text-2xl font-bold text-amber-400">{new Set(imageDatabase.flatMap(img => img.tags)).size}</div>
+              <div className="text-gray-400 text-xs sm:text-sm">Unique Tags</div>
             </div>
           </div>
         </div>
 
         {/* Search and Filter Controls */}
-        <div className="bg-white/5 rounded-lg p-6 border border-amber-500/20 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <div className="bg-white/5 rounded-lg p-4 sm:p-6 border border-amber-500/20 mb-6 sm:mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
             {/* Search */}
-            <div>
-              <label className="block text-amber-300 text-sm font-medium mb-2">Search Images</label>
+            <div className="sm:col-span-2 lg:col-span-1">
+              <label className="block text-amber-300 text-xs sm:text-sm font-medium mb-2">Search Images</label>
               <input
                 type="text"
                 placeholder="Search by title, description, tags..."
-                className="w-full px-4 py-2 bg-gray-500/60 border border-amber-500/30 rounded-lg text-white placeholder-gray-400 focus:border-amber-500/50 focus:outline-none transition-colors duration-200"
+                className="w-full px-3 sm:px-4 py-2 bg-gray-500/60 border border-amber-500/30 rounded-lg text-white placeholder-gray-400 focus:border-amber-500/50 focus:outline-none transition-colors duration-200 text-sm sm:text-base"
                 value={searchTerm}
                 onChange={handleSearchChange}
                 onKeyUp={handleFilter}
@@ -117,9 +117,9 @@ function Gallery() {
 
             {/* Category Filter */}
             <div>
-              <label className="block text-amber-300 text-sm font-medium mb-2">Category</label>
+              <label className="block text-amber-300 text-xs sm:text-sm font-medium mb-2">Category</label>
               <select
-                className="w-full px-4 py-2 bg-gray-700/60 border border-amber-500/30 rounded-lg text-white focus:border-amber-500/50 focus:outline-none transition-colors duration-200"
+                className="w-full px-3 sm:px-4 py-2 bg-gray-700/60 border border-amber-500/30 rounded-lg text-white focus:border-amber-500/50 focus:outline-none transition-colors duration-200 text-sm sm:text-base"
                 value={selectedCategory}
                 onChange={handleCategoryChange}
                 style={{ color: 'white' }}
@@ -136,7 +136,7 @@ function Gallery() {
             <div className="flex items-end">
               <button
                 onClick={clearFilters}
-                className="w-full px-4 py-2 bg-gray-600/50 hover:bg-gray-600/70 text-white rounded-lg transition-colors duration-200 border border-gray-500/30"
+                className="w-full px-3 sm:px-4 py-2 bg-gray-600/50 hover:bg-gray-600/70 text-white rounded-lg transition-colors duration-200 border border-gray-500/30 text-sm sm:text-base"
               >
                 Clear Filters
               </button>
@@ -145,8 +145,8 @@ function Gallery() {
         </div>
 
         {/* Results Count */}
-        <div className="mb-6">
-          <p className="text-gray-400">
+        <div className="mb-4 sm:mb-6">
+          <p className="text-gray-400 text-sm sm:text-base">
             Showing {filteredImages.length} of {imageDatabase.length} images
             {searchTerm && ` matching "${searchTerm}"`}
             {selectedCategory !== "all" && ` in ${categories.find(c => c.id === selectedCategory)?.name}`}
@@ -155,7 +155,7 @@ function Gallery() {
 
         {/* Image Grid */}
         {filteredImages.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {filteredImages.map((image) => (
               <div key={image.id} className="bg-white/5 rounded-lg overflow-hidden border border-amber-500/20 hover:border-amber-500/50 transition-all duration-300">
                 {/* Image */}
@@ -163,7 +163,7 @@ function Gallery() {
                   <img
                     src={image.imageUrl}
                     alt={image.title}
-                    className="w-full h-48 object-cover transition-transform duration-300 hover:scale-110"
+                    className="w-full h-40 sm:h-48 object-cover transition-transform duration-300 hover:scale-110"
                   />
                   
                   {/* Featured Badge */}
@@ -184,12 +184,12 @@ function Gallery() {
                 </div>
 
                 {/* Content */}
-                <div className="p-4">
-                  <h3 className="text-white font-semibold mb-2 text-lg overflow-hidden text-ellipsis whitespace-nowrap">
+                <div className="p-3 sm:p-4">
+                  <h3 className="text-white font-semibold mb-2 text-base sm:text-lg overflow-hidden text-ellipsis whitespace-nowrap">
                     {image.title}
                   </h3>
                   
-                  <p className="text-gray-400 text-sm mb-3 overflow-hidden text-ellipsis whitespace-nowrap">
+                  <p className="text-gray-400 text-xs sm:text-sm mb-3 overflow-hidden text-ellipsis whitespace-nowrap">
                     {image.description}
                   </p>
                   
@@ -234,19 +234,19 @@ function Gallery() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-12">
-            <div className="w-24 h-24 bg-gray-700/50 rounded-full flex items-center justify-center mx-auto mb-6">
-              <svg className="w-12 h-12 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+          <div className="text-center py-8 sm:py-12">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 bg-gray-700/50 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+              <svg className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
               </svg>
             </div>
-            <h3 className="text-xl font-semibold text-gray-300 mb-2">No images found</h3>
-            <p className="text-gray-500 mb-4">
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-300 mb-2">No images found</h3>
+            <p className="text-gray-500 mb-4 text-sm sm:text-base">
               Try adjusting your search terms or filters
             </p>
             <button
               onClick={clearFilters}
-              className="px-6 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors duration-200"
+              className="px-4 sm:px-6 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors duration-200 text-sm sm:text-base"
             >
               Clear All Filters
             </button>
