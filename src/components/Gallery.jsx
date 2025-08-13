@@ -167,7 +167,7 @@ function Gallery() {
         </div>
 
         {/* Search and Filter Controls */}
-        <div className="bg-white/5 rounded-lg p-4 sm:p-6 border border-amber-500/20 mb-6 sm:mb-8">
+        <div className="bg-gray-700/60 rounded-lg p-4 sm:p-6 border border-amber-500/20 mb-6 sm:mb-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
             {/* Search */}
             <div className="sm:col-span-2 lg:col-span-1">
@@ -226,7 +226,7 @@ function Gallery() {
             {filteredImages.map((image) => (
               <div 
                 key={image.id} 
-                className="bg-white/5 rounded-lg overflow-hidden border border-amber-500/20 hover:border-amber-500/50 transition-all duration-300 cursor-pointer"
+                className="bg-gray-700/60 rounded-lg overflow-hidden border border-amber-500/20 hover:border-amber-500/50 transition-all duration-300 cursor-pointer"
                 onClick={() => openModal(image)}
               >
                 {/* Image */}
