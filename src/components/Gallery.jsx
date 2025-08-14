@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { imageDatabase, categories, searchImages, getImagesByCategory } from "../data/imageDatabase";
+import { imageDatabase, categories, getImagesByCategory } from "../data/imageDatabase";
 
 function Gallery() {
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -12,14 +12,20 @@ function Gallery() {
   const handleFilter = () => {
     let filtered = imageDatabase;
 
-    // Apply category filter
+    // Apply category filter first
     if (selectedCategory !== "all") {
       filtered = getImagesByCategory(selectedCategory);
     }
 
-    // Apply search filter
+    // Apply search filter to the already filtered results
     if (searchTerm.trim()) {
-      filtered = searchImages(searchTerm);
+      filtered = filtered.filter(img => 
+        img.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        img.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        img.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        img.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        img.members.some(member => member.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
     }
 
     setFilteredImages(filtered);
@@ -28,9 +34,7 @@ function Gallery() {
   // Handle search input change
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
-    if (e.target.value.trim() === "") {
-      handleFilter();
-    }
+    handleFilter();
   };
 
   // Handle category change
@@ -57,6 +61,11 @@ function Gallery() {
     setIsModalOpen(false);
     setSelectedImage(null);
   };
+
+  // Initial filter on component mount
+  React.useEffect(() => {
+    handleFilter();
+  });
 
   // Close modal on escape key
   React.useEffect(() => {
@@ -178,7 +187,6 @@ function Gallery() {
                 className="w-full px-3 sm:px-4 py-2 bg-gray-500/60 border border-amber-500/30 rounded-lg text-white placeholder-gray-400 focus:border-amber-500/50 focus:outline-none transition-colors duration-200 text-sm sm:text-base"
                 value={searchTerm}
                 onChange={handleSearchChange}
-                onKeyUp={handleFilter}
               />
             </div>
 

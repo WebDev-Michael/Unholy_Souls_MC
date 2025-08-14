@@ -1,8 +1,10 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 
 function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const { isAuthenticated } = useAuth()
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
@@ -26,6 +28,14 @@ function Navigation() {
           <Link to="/" className="text-white hover:text-amber-400 transition-colors duration-200">Home</Link>
           <Link to="/meetthesouls" className="text-white hover:text-amber-400 transition-colors duration-200">Meet the Souls</Link>
           <Link to="/gallery" className="text-white hover:text-amber-400 transition-colors duration-200">Gallery</Link>
+          {isAuthenticated ? (
+            <>
+              <Link to="/admin" className="text-amber-400 hover:text-amber-300 transition-colors duration-200 font-medium">Admin</Link>
+              <Link to="/members" className="text-amber-400 hover:text-amber-300 transition-colors duration-200 font-medium">Members</Link>
+            </>
+          ) : (
+            <Link to="/login" className="text-amber-400 hover:text-amber-300 transition-colors duration-200 font-medium">Login</Link>
+          )}
         </nav>
 
         {/* Mobile Menu Button */}
@@ -84,6 +94,32 @@ function Navigation() {
             >
               Gallery
             </Link>
+            {isAuthenticated ? (
+              <>
+                <Link 
+                  to="/admin" 
+                  className="text-amber-400 hover:text-amber-300 transition-colors duration-200 px-2 py-2 rounded hover:bg-gray-600/50 font-medium"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Admin
+                </Link>
+                <Link 
+                  to="/members" 
+                  className="text-amber-400 hover:text-amber-300 transition-colors duration-200 px-2 py-2 rounded hover:bg-gray-600/50 font-medium"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Members
+                </Link>
+              </>
+            ) : (
+              <Link 
+                to="/login" 
+                className="text-amber-400 hover:text-amber-300 transition-colors duration-200 px-2 py-2 rounded hover:bg-gray-600/50 font-medium"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Login
+              </Link>
+            )}
           </nav>
         </div>
       )}

@@ -1,27 +1,27 @@
 // Image Database Structure for Unholy Souls MC
-export const imageDatabase = [
+let imageDatabase = [
   {
     id: 1,
     title: "Club Ride 2025",
-    category: "rides",
+    category: "Club",
     description: "Epic ride through the mountains with the brotherhood",
     imageUrl: "https://i.imgur.com/2cZtQxl.png",
     tags: ["ride", "support local business", "brotherhood", "adventure"],
     featured: true,
     location: "car wash",
-    members: ["Road Captain", "Vice President"],
+    members: ["All Members"],
     date: '8/13/2025'
   },
   {
     id: 2,
     title: "Top 9",
-    category: "brotherhood",
+    category: "Club",
     description: "The core members that make it all happen",
     imageUrl: "https://i.imgur.com/ZRQ9NtS.png",
     tags: ["leadership", "core", "members", "brotherhood"],
     featured: true,
     location: "Club House",
-    members: ["President", "Vice President", "Secretary", "Treasurer"],
+    members: ["Top 9"],
     date: '8/13/2025'
   },
   {
@@ -146,7 +146,7 @@ export const imageDatabase = [
   },
   {
     id: 13,
-    title: "Bunny Frost - Bella",
+    title: "Bunny Frost - Houdini",
     category: "Bay City",
     description: "Enforcer of the Bay City Chapter.",
     imageUrl: "https://imgur.com/MEkgy1v.png",
@@ -179,18 +179,61 @@ export const imageDatabase = [
     location: "Bay City Chapter",
     members: ["Trent Carter"],
     date: '8/13/2025'
-  }
+  },
+  // {
+  //   id: 16,
+  //   title: "",
+  //   category: "",
+  //   description: "",
+  //   imageUrl: null,
+  //   tags: [],
+  //   featured: false,
+  //   location: "",
+  //   members: [],
+  //   date: ''
+  // }
 ];
+
+// Load uploaded images from localStorage
+const loadUploadedImages = () => {
+  try {
+    const uploaded = localStorage.getItem('uploadedImages');
+    if (uploaded) {
+      const parsedImages = JSON.parse(uploaded);
+      imageDatabase = [...imageDatabase, ...parsedImages];
+    }
+  } catch (error) {
+    console.warn('Could not load uploaded images:', error);
+  }
+};
+
+// Initialize uploaded images
+loadUploadedImages();
+
+// Export the database
+export { imageDatabase };
+
+// Function to add new images to the database
+export const addImageToDatabase = (newImage) => {
+  imageDatabase.unshift(newImage);
+  // Update localStorage
+  try {
+    const existing = localStorage.getItem('uploadedImages') || '[]';
+    const existingImages = JSON.parse(existing);
+    const updatedImages = [newImage, ...existingImages];
+    localStorage.setItem('uploadedImages', JSON.stringify(updatedImages));
+  } catch (error) {
+    console.warn('Could not save image to localStorage:', error);
+  }
+};
 
 // Categories for filtering
 export const categories = [
   { id: "all", name: "All Categories", count: imageDatabase.length },
-  { id: "rides", name: "Club Rides", count: imageDatabase.filter(img => img.category === "rides").length },
-  { id: "events", name: "Events & Gatherings", count: imageDatabase.filter(img => img.category === "events").length },
-  { id: "brotherhood", name: "Brotherhood", count: imageDatabase.filter(img => img.category === "brotherhood").length },
-  { id: "dockside", name: "Dockside Chapter", count: imageDatabase.filter(img => img.category === "Dockside").length },
-  { id: "bay city", name: "Bay City Chapter", count: imageDatabase.filter(img => img.category === "Bay City").length },
-  { id: "national", name: "National", count: imageDatabase.filter(img => img.category === "National").length }
+  { id: "Club", name: "Club", count: imageDatabase.filter(img => img.category === "Club").length },
+  { id: "Dockside", name: "Dockside Chapter", count: imageDatabase.filter(img => img.category === "Dockside").length },
+  { id: "Bay City", name: "Bay City Chapter", count: imageDatabase.filter(img => img.category === "Bay City").length },
+  { id: "National", name: "National", count: imageDatabase.filter(img => img.category === "National").length }
 ];
 
 // Utility functions
@@ -224,7 +267,7 @@ export const getImagesByDate = (startDate, endDate) => {
 // Get member profile images specifically
 export const getMemberProfileImages = () => {
   return imageDatabase.filter(img => 
-    img.category === "brotherhood" && 
+    img.tags.includes("brotherhood") && 
     img.members.length === 1 && 
     img.members[0] !== "All Members"
   );

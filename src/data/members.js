@@ -89,7 +89,7 @@ export const members = [
   },
   {
     name: 'Bunny Frost',
-    roadname: 'Bella',
+    roadname: 'Houdini',
     rank: 'Enforcer',
     chapter: 'Bay City',
     bio: 'Bunny is the enforcer of the Bay City Chapter.',
@@ -111,6 +111,14 @@ export const members = [
     bio: 'Trent is the full patch member of the Bay City Chapter.',
     image: null,
   },
+  // {
+  //   name: '',
+  //   roadname: '',
+  //   rank: '',
+  //   chapter: '',
+  //   bio: '',
+  //   image: null,
+  // },
 ];
 
 // Utility functions for member data
