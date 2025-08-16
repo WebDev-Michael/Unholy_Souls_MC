@@ -8,10 +8,15 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "build": "echo 'No build step required for Node.js backend'",
-    "db:sync": "node -e \"import('./db/connection.js').then(db => db.syncDatabase(true)).then(() => process.exit(0)).catch(err => { console.error(err); process.exit(1); })\"",
-    "db:seed": "node -e \"import('./seeders/001_initial_data.js').then(seeder => seeder.up()).then(() => process.exit(0)).catch(err => { console.error(err); process.exit(1); })\"",
+    "postinstall": "npm run db:setup",
+    "db:setup": "node setup-database.js",
+    "db:migrate": "node -e \"import('./db/connection.js').then(async (db) => { try { await db.syncDatabase(false); console.log('✅ Database migration completed successfully'); process.exit(0); } catch (err) { console.error('❌ Database migration failed:', err); process.exit(1); } })\"",
+    "db:seed": "node -e \"import('./seeders/001_initial_data.js').then(async (seeder) => { try { await seeder.up(); console.log('✅ Database seeding completed successfully'); process.exit(0); } catch (err) { console.error('❌ Database seeding failed:', err); process.exit(1); } })\"",
+    "db:sync": "node -e \"import('./db/connection.js').then(async (db) => { try { await db.syncDatabase(true); console.log('✅ Database sync completed successfully'); process.exit(0); } catch (err) { console.error('❌ Database sync failed:', err); process.exit(1); } })\"",
     "db:reset": "npm run db:sync && npm run db:seed",
-    "db:start": "npm run db:sync && npm start"
+    "db:start": "npm run db:migrate && npm start",
+    "render:deploy": "npm run db:setup && npm start",
+    "render:build": "npm install && npm run db:setup"
   },
   "keywords": [
     "community",

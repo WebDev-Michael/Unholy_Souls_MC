@@ -1,48 +1,33 @@
 #!/bin/bash
 
-# Render.com Deployment Script for Unholy Souls MC Backend
-# This script runs during the build process on Render.com
+echo "🚀 Starting Render deployment for Unholy Souls MC Backend..."
 
-echo "🚀 Starting deployment process..."
+# Set environment
+export NODE_ENV=production
 
-# Check if we're in production mode
-if [ "$NODE_ENV" = "production" ]; then
-    echo "📦 Production environment detected"
+# Install dependencies
+echo "📦 Installing dependencies..."
+npm install
+
+# Wait a moment for any background processes
+sleep 2
+
+# Setup database (migrate and seed)
+echo "🗄️  Setting up database..."
+npm run db:setup
+
+# Check if database setup was successful
+if [ $? -eq 0 ]; then
+    echo "✅ Database setup completed successfully"
     
-    # Install dependencies
-    echo "📥 Installing dependencies..."
-    npm install
-    
-    # Wait for database to be ready (Render.com specific)
-    echo "⏳ Waiting for database connection..."
-    sleep 10
-    
-    # Run database migrations
-    echo "🗄️ Running database migrations..."
-    npm run migrate
-    
-    # Check if migrations were successful
-    if [ $? -eq 0 ]; then
-        echo "✅ Database migrations completed successfully"
-        
-        # Run seed data (optional - comment out if you don't want to seed production)
-        echo "🌱 Running seed data..."
-        npm run seed
-        
-        if [ $? -eq 0 ]; then
-            echo "✅ Seed data completed successfully"
-        else
-            echo "⚠️ Seed data failed, but continuing deployment"
-        fi
-    else
-        echo "❌ Database migrations failed"
-        exit 1
-    fi
-    
-    echo "🎉 Deployment completed successfully!"
+    # Start the server
+    echo "🚀 Starting server..."
+    npm start
 else
-    echo "🔧 Development environment detected"
-    echo "📥 Installing dependencies..."
-    npm install
-    echo "✅ Development setup completed"
+    echo "❌ Database setup failed, but continuing with server startup..."
+    echo "⚠️  Some features may not work properly"
+    
+    # Start the server anyway (it has retry logic)
+    echo "🚀 Starting server with database retry logic..."
+    npm start
 fi

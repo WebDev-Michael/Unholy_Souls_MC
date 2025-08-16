@@ -1,151 +1,124 @@
-# Unholy Souls MC - Backend API
+# Unholy Souls MC Backend
 
-This is the backend API server for the Unholy Souls MC website, providing server-side functionality for the gaming community platform.
+Backend API server for the Unholy Souls MC website.
 
-## 🚀 Features
+## 🚀 Quick Start
 
-- **RESTful API** - Clean and organized API endpoints
-- **Security** - Built-in security middleware (helmet, CORS, rate limiting)
-- **Logging** - Request logging with Morgan
-- **Environment Configuration** - Secure environment variable management
-- **Development Tools** - Hot reloading with Nodemon
-
-## 📋 Prerequisites
-
-- Node.js (version 18.0.0 or higher)
-- npm or yarn package manager
-
-## 🛠️ Installation
-
-1. Navigate to the backend directory:
-   ```bash
-   cd backend
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Create a `.env` file in the backend directory:
-   ```bash
-   cp .env.example .env
-   ```
-
-4. Configure your environment variables in the `.env` file:
-   ```env
-   PORT=5000
-   NODE_ENV=development
-   ```
-
-## 🚀 Running the Server
-
-### Development Mode (with auto-reload)
+### Development
 ```bash
+npm install
 npm run dev
 ```
 
-### Production Mode
+### Production
 ```bash
+npm install
 npm start
 ```
 
-### Running Tests
-```bash
-npm test
-```
+## 📦 Available Scripts
+
+- `npm start` - Start production server
+- `npm run dev` - Start development server with nodemon
+- `npm run db:setup` - Setup database (migrate + seed)
+- `npm run db:migrate` - Run database migrations
+- `npm run db:seed` - Seed database with initial data
+- `npm run db:reset` - Reset database (sync + seed)
+- `npm run render:deploy` - Full deployment for Render
+- `npm run render:build` - Build and database setup for Render
+
+## 🗄️ Database Setup
+
+The backend automatically handles database setup:
+
+1. **Automatic Migration**: Database schema is synced on startup
+2. **Automatic Seeding**: Initial data is created if database is empty
+3. **Retry Logic**: Server retries database connection up to 5 times
 
 ## 🌐 API Endpoints
 
-The backend provides the following API endpoints:
+### Public Endpoints
+- `GET /health` - Health check
+- `GET /gallery` - Get gallery images
+- `GET /gallery/categories` - Get image categories
+- `GET /meetthesouls` - Get members
+- `GET /meetthesouls/ranks` - Get member ranks
+- `GET /meetthesouls/chapters` - Get member chapters
 
 ### Authentication
-- `POST /api/auth/login` - User login
-- `POST /api/auth/logout` - User logout
-- `GET /api/auth/verify` - Verify authentication token
+- `POST /login` - User login
+- `POST /register` - User registration
+- `POST /logout` - User logout
 
-### Members
-- `GET /api/members` - Get all members
-- `POST /api/members` - Create new member
-- `PUT /api/members/:id` - Update member
-- `DELETE /api/members/:id` - Delete member
+### Admin Endpoints (require auth + admin role)
+- `GET /admin/gallery` - Admin gallery management
+- `POST /admin/gallery` - Create gallery image
+- `PUT /admin/gallery/:id` - Update gallery image
+- `DELETE /admin/gallery/:id` - Delete gallery image
+- `GET /admin/members` - Admin member management
+- `POST /admin/members` - Create member
+- `PUT /admin/members/:id` - Update member
+- `DELETE /admin/members/:id` - Delete member
+- `GET /admin/users` - Admin user management
+- `POST /admin/users` - Create user
+- `PUT /admin/users/:id` - Update user
+- `DELETE /admin/users/:id` - Delete user
 
-### Gallery
-- `GET /api/gallery` - Get all images
-- `POST /api/gallery` - Upload new image
-- `DELETE /api/gallery/:id` - Delete image
+## 🔧 Environment Variables
 
-### Admin
-- `GET /api/admin/dashboard` - Admin dashboard data
-- `POST /api/admin/members` - Admin member management
+### Required
+- `JWT_SECRET` - Secret for JWT token signing
+- `DATABASE_URL` - PostgreSQL connection string (production)
+- `NODE_ENV` - Environment (development/production)
 
-## 📁 Project Structure
-
-```
-backend/
-├── server.js          # Main server file
-├── routes/            # API route handlers
-├── middleware/        # Custom middleware
-├── controllers/       # Business logic
-├── models/           # Data models
-├── config/           # Configuration files
-├── utils/            # Utility functions
-└── tests/            # Test files
-```
-
-## 🔧 Configuration
-
-The server can be configured through environment variables:
-
-- `PORT` - Server port (default: 5000)
-- `NODE_ENV` - Environment mode (development/production)
-- `CORS_ORIGIN` - Allowed CORS origins
+### Optional
 - `RATE_LIMIT_WINDOW` - Rate limiting window in milliseconds
 - `RATE_LIMIT_MAX` - Maximum requests per window
+- `FRONTEND_URL` - Frontend URL for CORS
 
-## 🧪 Testing
+## 🚀 Render Deployment
 
-Run the test suite:
-```bash
-npm test
+For detailed Render deployment instructions, see [RENDER_DEPLOYMENT.md](./RENDER_DEPLOYMENT.md).
+
+### Quick Render Setup
+1. Set environment variables in Render dashboard
+2. Use build command: `npm run render:build`
+3. Use start command: `npm start`
+
+## 🔐 Default Admin User
+
+After first deployment:
+- **Username**: `admin`
+- **Password**: `admin123`
+- **Role**: `admin`
+
+⚠️ **Change this password immediately after first login!**
+
+## 📊 Health Check
+
+Monitor your backend health at `/health`:
+
+```json
+{
+  "status": "OK",
+  "message": "Unholy Souls MC Backend is running",
+  "timestamp": "2024-01-01T00:00:00.000Z",
+  "environment": "production",
+  "database": "connected",
+  "uptime": 123.456
+}
 ```
 
-Run tests in watch mode:
-```bash
-npm test -- --watch
-```
+## 🛠️ Technologies
 
-## 📦 Dependencies
+- **Runtime**: Node.js
+- **Framework**: Express.js
+- **Database**: PostgreSQL (production), SQLite (development)
+- **ORM**: Sequelize
+- **Authentication**: JWT
+- **Security**: Helmet, CORS, Rate Limiting
+- **Logging**: Morgan
 
-### Production Dependencies
-- **express** - Web framework for Node.js
-- **cors** - Cross-Origin Resource Sharing middleware
-- **dotenv** - Environment variable loader
-- **helmet** - Security middleware
-- **morgan** - HTTP request logger
-- **express-rate-limit** - Rate limiting middleware
+## 📝 License
 
-### Development Dependencies
-- **nodemon** - Development server with auto-reload
-- **jest** - Testing framework
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Ensure all tests pass
-6. Submit a pull request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🆘 Support
-
-For support and questions, please contact the development team or create an issue in the repository.
-
----
-
-**Unholy Souls MC** - Building the ultimate Minecraft community experience! 🎮
+MIT License - see LICENSE file for details.
