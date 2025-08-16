@@ -39,16 +39,63 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Rate limiting
-const limiter = rateLimit({
+// Rate limiting - More permissive for public endpoints, stricter for admin/auth
+const publicLimiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW) || 15 * 60 * 1000, // 15 minutes
-  max: parseInt(process.env.RATE_LIMIT_MAX) || 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.'
+  max: parseInt(process.env.RATE_LIMIT_MAX) || 1000, // 1000 requests per 15 minutes for public endpoints
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    console.log(`🚫 Rate limit exceeded for ${req.ip} on ${req.path}`);
+    res.status(429).json({ 
+      error: 'Too many requests from this IP, please try again later.',
+      retryAfter: Math.ceil(parseInt(process.env.RATE_LIMIT_WINDOW) / 1000 / 60) || 15
+    });
+  }
 });
-app.use('/', limiter);
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // 10 login attempts per 15 minutes
+  message: 'Too many authentication attempts, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+const adminLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 200, // 200 requests per 15 minutes for admin endpoints
+  message: 'Too many admin requests, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+// Very permissive rate limiter for frequently accessed public endpoints
+const frequentAccessLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5000, // 5000 requests per 15 minutes for frequently accessed endpoints
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+// Apply rate limiting selectively
+app.use('/login', authLimiter); // Stricter for authentication
+app.use('/register', authLimiter); // Stricter for registration
+app.use('/admin', adminLimiter); // Moderate for admin endpoints
+app.use('/meetthesouls', frequentAccessLimiter); // Very permissive for member data
+app.use('/gallery', frequentAccessLimiter); // Very permissive for gallery data
+app.use('/', publicLimiter); // More permissive for other public endpoints
 
 // Logging middleware
 app.use(morgan('combined'));
+
+// Request logging for debugging
+app.use((req, res, next) => {
+  console.log(`📡 ${req.method} ${req.path} - IP: ${req.ip} - User-Agent: ${req.get('User-Agent')?.substring(0, 50)}...`);
+  next();
+});
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));

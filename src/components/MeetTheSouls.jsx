@@ -77,7 +77,7 @@ function MeetTheSouls() {
     };
 
     loadData();
-  });
+  }, []); // Only run on mount
 
   // Filter members based on current filters
   const filteredMembers = members.filter(member => {
