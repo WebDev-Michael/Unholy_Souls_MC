@@ -64,7 +64,7 @@ function AdminPanel() {
 
   const handleSaveEdit = async (updatedImage) => {
     try {
-              const savedImage = await adminAPI.updateGalleryImage(updatedImage.id, updatedImage);
+      const savedImage = await adminAPI.updateGalleryImage(updatedImage.id, updatedImage);
       setImages(prev => prev.map(img => 
         img.id === updatedImage.id ? savedImage : img
       ));
@@ -288,6 +288,7 @@ function AdminPanel() {
                   title: formData.get('title'),
                   description: formData.get('description'),
                   category: formData.get('category'),
+                  imageUrl: formData.get('imageUrl'),
                   tags: formData.get('tags').split(',').map(tag => tag.trim()).filter(tag => tag),
                   location: formData.get('location'),
                   members: formData.get('members').split(',').map(member => member.trim()).filter(member => member),
@@ -314,10 +315,20 @@ function AdminPanel() {
                       defaultValue={selectedImage.category}
                       className="w-full px-3 py-2 bg-gray-700/60 border border-amber-500/30 rounded-lg text-white focus:border-amber-500/50 focus:outline-none"
                     >
-                      {['Club', 'Dockside', 'Bay City', 'National'].map(cat => (
+                      {['Club', 'National', 'Dockside', 'Bay City', 'Event', 'Other'].map(cat => (
                         <option key={cat} value={cat}>{cat}</option>
                       ))}
                     </select>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-amber-300 text-sm font-medium mb-2">Image URL</label>
+                    <input
+                      type="url"
+                      name="imageUrl"
+                      defaultValue={selectedImage.imageUrl}
+                      required
+                      className="w-full px-3 py-2 bg-gray-700/60 border border-amber-500/30 rounded-lg text-white focus:border-amber-500/50 focus:outline-none"
+                    />
                   </div>
                   <div className="md:col-span-2">
                     <label className="block text-amber-300 text-sm font-medium mb-2">Description</label>

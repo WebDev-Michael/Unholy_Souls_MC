@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { galleryAPI } from "../services/api";
 
 function Gallery() {
@@ -38,7 +38,7 @@ function Gallery() {
   }, []);
 
   // Filter and search images
-  const handleFilter = () => {
+  const handleFilter = useCallback(() => {
     let filtered = images;
 
     // Apply category filter first
@@ -59,18 +59,16 @@ function Gallery() {
     }
 
     setFilteredImages(filtered);
-  };
+  }, [images, selectedCategory, searchTerm]);
 
   // Handle search input change
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
-    handleFilter();
   };
 
   // Handle category change
   const handleCategoryChange = (e) => {
     setSelectedCategory(e.target.value);
-    handleFilter();
   };
 
   // Clear all filters
@@ -92,10 +90,10 @@ function Gallery() {
     setSelectedImage(null);
   };
 
-  // Initial filter on component mount
+  // Apply filters whenever images, selectedCategory, or searchTerm changes
   useEffect(() => {
     handleFilter();
-  });
+  }, [images, selectedCategory, searchTerm]);
 
   // Close modal on escape key
   useEffect(() => {
@@ -260,9 +258,9 @@ function Gallery() {
                 style={{ color: 'white' }}
               >
                 <option value="all">All Categories</option>
-                {categories.map((category, index) => (
-                  <option key={index} value={category}>
-                    {category}
+                {categories.map((categoryObj, index) => (
+                  <option key={index} value={categoryObj.category}>
+                    {categoryObj.category}
                   </option>
                 ))}
               </select>
@@ -285,7 +283,7 @@ function Gallery() {
           <p className="text-gray-400 text-sm sm:text-base">
             Showing {filteredImages.length} of {images.length} images
             {searchTerm && ` matching "${searchTerm}"`}
-            {selectedCategory !== "all" && ` in ${categories.find(c => c.id === selectedCategory)?.name}`}
+            {selectedCategory !== "all" && ` in ${selectedCategory}`}
           </p>
         </div>
 

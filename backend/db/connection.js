@@ -1,20 +1,36 @@
-import knex from 'knex';
-import config from '../knexfile.js';
+import { Sequelize } from 'sequelize';
+import config from '../config/database.js';
 
-// Get the environment from NODE_ENV or default to development
-const environment = process.env.NODE_ENV || 'development';
-const dbConfig = config[environment];
+const env = process.env.NODE_ENV || 'development';
+const dbConfig = config[env];
 
-// Create the database connection
-const db = knex(dbConfig);
+const sequelize = new Sequelize(dbConfig);
 
 // Test the connection
-db.raw('SELECT 1')
-  .then(() => {
-    console.log(`Database connected successfully in ${environment} mode`);
-  })
-  .catch((err) => {
-    console.error('Database connection failed:', err);
-  });
+export const testConnection = async () => {
+  try {
+    await sequelize.authenticate();
+    console.log('✅ Database connection has been established successfully.');
+    return true;
+  } catch (error) {
+    console.error('❌ Unable to connect to the database:', error);
+    return false;
+  }
+};
 
-export default db;
+// Sync database (for development - creates tables if they don't exist)
+export const syncDatabase = async (force = false) => {
+  try {
+    // Import models to ensure they're registered with Sequelize
+    await import('../models/index.js');
+    
+    await sequelize.sync({ force });
+    console.log('✅ Database synchronized successfully.');
+    return true;
+  } catch (error) {
+    console.error('❌ Error synchronizing database:', error);
+    return false;
+  }
+};
+
+export default sequelize;

@@ -5,7 +5,7 @@ import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
-import { Member, GalleryImage, User } from './models/index.js';
+import { sequelize, Member, GalleryImage, User } from './models/index.js';
 
 // Load environment variables
 dotenv.config();
@@ -18,8 +18,15 @@ app.use(helmet());
 
 // CORS configuration
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:5173', // Vite default port
-  credentials: true
+  origin: [
+    'http://localhost:5173', // Vite default port
+    'http://localhost:5174', // Current frontend port
+    'http://localhost:5175', // Alternative Vite port
+    'http://localhost:3000'  // Alternative React port
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 // Rate limiting
@@ -170,13 +177,40 @@ app.get('/gallery', async (req, res) => {
     console.log('🔍 GET /gallery - Request received');
     console.log('🔍 Query params:', req.query);
     
-    const { category, featured, search, member, page, itemsPerPage } = req.query;
-    const filters = { category, featured, search, member, page, itemsPerPage };
+    const { category, featured, search, page, itemsPerPage } = req.query;
     
-    console.log('🔍 Filters applied:', filters);
-    console.log('🔍 Calling GalleryImage.findAll...');
+    // Build where clause
+    const where = {};
+    if (category && category !== 'all') {
+      where.category = category;
+    }
+    if (featured !== undefined) {
+      where.featured = featured === 'true';
+    }
+    if (search) {
+      const searchTerm = search.toLowerCase();
+      where[sequelize.Op.or] = [
+        { title: { [sequelize.Op.like]: `%${searchTerm}%` } },
+        { description: { [sequelize.Op.like]: `%${searchTerm}%` } },
+        { location: { [sequelize.Op.like]: `%${searchTerm}%` } }
+      ];
+    }
     
-    const images = await GalleryImage.findAll(filters);
+    const options = {
+      where,
+      order: [['date', 'DESC']]
+    };
+    
+    // Add pagination if provided
+    if (page && itemsPerPage) {
+      const offset = (parseInt(page) - 1) * parseInt(itemsPerPage);
+      options.limit = parseInt(itemsPerPage);
+      options.offset = offset;
+    }
+    
+    console.log('🔍 Calling GalleryImage.findAll with options:', options);
+    
+    const images = await GalleryImage.findAll(options);
     console.log('✅ Gallery images fetched successfully, count:', images.length);
     
     res.json(images.map(image => image.toJSON()));
@@ -190,9 +224,16 @@ app.get('/gallery', async (req, res) => {
 app.get('/gallery/categories', async (req, res) => {
   try {
     console.log('🔍 GET /gallery/categories - Request received');
-    console.log('🔍 Calling GalleryImage.getCategories...');
     
-    const categories = await GalleryImage.getCategories();
+    const categories = await GalleryImage.findAll({
+      attributes: [
+        'category',
+        [sequelize.fn('COUNT', sequelize.col('id')), 'count']
+      ],
+      group: 'category',
+      order: [['category', 'ASC']]
+    });
+    
     console.log('✅ Gallery categories fetched successfully:', categories);
     
     res.json(categories);
@@ -206,9 +247,34 @@ app.get('/gallery/categories', async (req, res) => {
 app.get('/meetthesouls', async (req, res) => {
   try {
     const { rank, chapter, search } = req.query;
-    const filters = { rank, chapter, search };
     
-    const members = await Member.findAll(filters);
+    // Build where clause
+    const where = {};
+    if (rank && rank !== 'all') {
+      where.rank = rank;
+    }
+    if (chapter && chapter !== 'all') {
+      where.chapter = chapter;
+    }
+    if (search) {
+      where[sequelize.Op.or] = [
+        { name: { [sequelize.Op.like]: `%${search}%` } },
+        { roadname: { [sequelize.Op.like]: `%${search}%` } },
+        { bio: { [sequelize.Op.like]: `%${search}%` } }
+      ];
+    }
+    
+    const options = {
+      where,
+      order: [['name', 'ASC']],
+      include: [{
+        model: User,
+        as: 'user',
+        attributes: ['id', 'username', 'email', 'role', 'isActive']
+      }]
+    };
+    
+    const members = await Member.findAll(options);
     res.json(members.map(member => member.toJSON()));
   } catch (error) {
     console.error('Error fetching members:', error);
@@ -219,7 +285,15 @@ app.get('/meetthesouls', async (req, res) => {
 // Members ranks endpoint
 app.get('/meetthesouls/ranks', async (req, res) => {
   try {
-    const ranks = await Member.getRanks();
+    const ranks = await Member.findAll({
+      attributes: [
+        'rank',
+        [sequelize.fn('COUNT', sequelize.col('id')), 'count']
+      ],
+      where: { isActive: true },
+      group: 'rank',
+      order: [['rank', 'ASC']]
+    });
     res.json(ranks);
   } catch (error) {
     console.error('Error fetching ranks:', error);
@@ -230,7 +304,15 @@ app.get('/meetthesouls/ranks', async (req, res) => {
 // Members chapters endpoint
 app.get('/meetthesouls/chapters', async (req, res) => {
   try {
-    const chapters = await Member.getChapters();
+    const chapters = await Member.findAll({
+      attributes: [
+        'chapter',
+        [sequelize.fn('COUNT', sequelize.col('id')), 'count']
+      ],
+      where: { isActive: true },
+      group: 'chapter',
+      order: [['chapter', 'ASC']]
+    });
     res.json(chapters);
   } catch (error) {
     console.error('Error fetching chapters:', error);
@@ -275,6 +357,14 @@ app.post('/admin/gallery', async (req, res) => {
       return res.status(400).json({ error: 'Title, category, description, and imageUrl are required' });
     }
 
+    // Validate that imageUrl is a proper URL
+    try {
+      new URL(imageUrl);
+    } catch {
+      console.log('❌ Invalid imageUrl format:', imageUrl);
+      return res.status(400).json({ error: 'Invalid imageUrl format. Must be a valid URL.' });
+    }
+
     console.log('✅ Validation passed, creating gallery image...');
     
     const newImage = await GalleryImage.create({ 
@@ -293,18 +383,73 @@ app.post('/admin/gallery', async (req, res) => {
 
 app.put('/admin/gallery/:id', async (req, res) => {
   try {
+    console.log('🔍 PUT /admin/gallery/:id - Request received');
+    console.log('🔍 URL params:', req.params);
+    console.log('🔍 Request body:', req.body);
+    console.log('🔍 User:', req.user);
+    
     const { id } = req.params;
-    const updateData = req.body;
+    const { title, category, description, imageUrl, tags, featured, location, members, date } = req.body;
+    
+    console.log('🔍 Looking for image with ID:', id);
+    console.log('🔍 Update data:', { title, category, description, imageUrl, tags, featured, location, members, date });
 
-    const image = await GalleryImage.findById(id);
-    if (!image) {
-      return res.status(404).json({ error: 'Image not found' });
+    // Validate required fields
+    if (!title || !category || !description || !imageUrl) {
+      console.log('❌ Validation failed - missing required fields');
+      console.log('❌ Required: title, category, description, imageUrl');
+      console.log('❌ Received:', { title: !!title, category: !!category, description: !!description, imageUrl: !!imageUrl });
+      return res.status(400).json({ error: 'Title, category, description, and imageUrl are required' });
     }
 
-    const updatedImage = await image.update(updateData);
+    // Validate that imageUrl is a proper URL
+    try {
+      new URL(imageUrl);
+    } catch {
+      console.log('❌ Invalid imageUrl format:', imageUrl);
+      return res.status(400).json({ error: 'Invalid imageUrl format. Must be a valid URL.' });
+    }
+
+    const image = await GalleryImage.findByPk(id);
+    if (!image) {
+      console.log('❌ Image not found with ID:', id);
+      return res.status(404).json({ error: 'Image not found' });
+    }
+    
+    // Safety check: ensure image is a proper Sequelize model instance
+    if (typeof image.toJSON !== 'function') {
+      console.log('❌ Image object is not a proper Sequelize model instance:', typeof image, image);
+      console.log('❌ Image object keys:', Object.keys(image || {}));
+      return res.status(500).json({ error: 'Invalid image data structure' });
+    }
+    
+    console.log('✅ Image found:', image.toJSON());
+    console.log('✅ Updating image...');
+
+    const updatedImage = await image.update({
+      title,
+      category,
+      description,
+      imageUrl,
+      tags: tags || [],
+      featured: featured || false,
+      location: location || null,
+      members: members || [],
+      date: date || new Date()
+    });
+    
+    // Safety check: ensure updatedImage is also a proper Sequelize model instance
+    if (typeof updatedImage.toJSON !== 'function') {
+      console.log('❌ Updated image object is not a proper Sequelize model instance:', typeof updatedImage, updatedImage);
+      return res.status(500).json({ error: 'Failed to update image - invalid response structure' });
+    }
+    
+    console.log('✅ Image updated successfully:', updatedImage.toJSON());
     res.json(updatedImage.toJSON());
   } catch (error) {
-    console.error('Error updating gallery image:', error);
+    console.error('❌ Error updating gallery image:', error);
+    console.error('❌ Error details:', error.message);
+    console.error('❌ Error stack:', error.stack);
     res.status(500).json({ error: 'Failed to update image' });
   }
 });
@@ -312,13 +457,13 @@ app.put('/admin/gallery/:id', async (req, res) => {
 app.delete('/admin/gallery/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const image = await GalleryImage.findById(id);
+    const image = await GalleryImage.findByPk(id);
     
     if (!image) {
       return res.status(404).json({ error: 'Image not found' });
     }
 
-    await image.delete();
+    await image.destroy();
     res.json({ message: 'Image deleted successfully' });
   } catch (error) {
     console.error('Error deleting gallery image:', error);
@@ -329,7 +474,14 @@ app.delete('/admin/gallery/:id', async (req, res) => {
 // Admin Member Management
 app.get('/admin/members', async (req, res) => {
   try {
-    const members = await Member.findAll();
+    const members = await Member.findAll({
+      order: [['name', 'ASC']],
+      include: [{
+        model: User,
+        as: 'user',
+        attributes: ['id', 'username', 'email', 'role', 'isActive']
+      }]
+    });
     res.json(members.map(member => member.toJSON()));
   } catch (error) {
     console.error('Error fetching admin members:', error);
@@ -375,7 +527,7 @@ app.put('/admin/members/:id', async (req, res) => {
     console.log('🔍 Looking for member with ID:', id);
     console.log('🔍 Update data:', updateData);
 
-    const member = await Member.findById(id);
+    const member = await Member.findByPk(id);
     if (!member) {
       console.log('❌ Member not found with ID:', id);
       return res.status(404).json({ error: 'Member not found' });
@@ -397,13 +549,13 @@ app.put('/admin/members/:id', async (req, res) => {
 app.delete('/admin/members/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const member = await Member.findById(id);
+    const member = await Member.findByPk(id);
     
     if (!member) {
       return res.status(404).json({ error: 'Member not found' });
     }
 
-    await member.delete();
+    await member.destroy();
     res.json({ message: 'Member deleted successfully' });
   } catch (error) {
     console.error('Error deleting member:', error);
@@ -431,7 +583,7 @@ app.post('/admin/users', async (req, res) => {
     }
 
     const newUser = await User.create({ username, email, password, role, memberId });
-    res.status(201).json({
+    res.json({
       message: 'User created successfully',
       user: newUser.toSafeJSON()
     });
@@ -446,7 +598,7 @@ app.put('/admin/users/:id', async (req, res) => {
     const { id } = req.params;
     const updateData = req.body;
 
-    const user = await User.findById(id);
+    const user = await User.findByPk(id);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -465,13 +617,13 @@ app.put('/admin/users/:id', async (req, res) => {
 app.delete('/admin/users/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await User.findById(id);
+    const user = await User.findByPk(id);
     
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    await user.delete();
+    await user.destroy();
     res.json({ message: 'User deleted successfully' });
   } catch (error) {
     console.error('Error deleting user:', error);
@@ -491,43 +643,63 @@ app.use((error, req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Unholy Souls MC Backend server running on port ${PORT}`);
-  console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🔗 Health check: http://localhost:${PORT}/health`);
-  console.log(`🌐 Available endpoints:`);
-  console.log(`   - POST /login`);
-  console.log(`   - POST /register`);
-  console.log(`   - POST /logout`);
-  console.log(`   - GET /gallery`);
-  console.log(`   - GET /gallery/categories`);
-  console.log(`   - GET /meetthesouls`);
-  console.log(`   - GET /meetthesouls/ranks`);
-  console.log(`   - GET /meetthesouls/chapters`);
-  console.log(`🔐 Admin endpoints (require auth + admin role):`);
-  console.log(`   - GET /admin/gallery`);
-  console.log(`   - POST /admin/gallery`);
-  console.log(`   - PUT /admin/gallery/:id`);
-  console.log(`   - DELETE /admin/gallery/:id`);
-  console.log(`   - GET /admin/members`);
-  console.log(`   - POST /admin/members`);
-  console.log(`   - PUT /admin/members/:id`);
-  console.log(`   - DELETE /admin/members/:id`);
-  console.log(`   - GET /admin/users`);
-  console.log(`   - POST /admin/users`);
-  console.log(`   - PUT /admin/users/:id`);
-  console.log(`   - DELETE /admin/users/:id`);
-});
+const startServer = async () => {
+  try {
+    // Test database connection
+    await sequelize.authenticate();
+    console.log('✅ Database connection has been established successfully.');
+    
+    // Sync database (for development - creates tables if they don't exist)
+    await sequelize.sync({ force: false });
+    console.log('✅ Database synchronized successfully.');
+    
+    app.listen(PORT, () => {
+      console.log(`🚀 Unholy Souls MC Backend server running on port ${PORT}`);
+      console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`🔗 Health check: http://localhost:${PORT}/health`);
+      console.log(`🌐 Available endpoints:`);
+      console.log(`   - POST /login`);
+      console.log(`   - POST /register`);
+      console.log(`   - POST /logout`);
+      console.log(`   - GET /gallery`);
+      console.log(`   - GET /gallery/categories`);
+      console.log(`   - GET /meetthesouls`);
+      console.log(`   - GET /meetthesouls/ranks`);
+      console.log(`   - GET /meetthesouls/chapters`);
+      console.log(`🔐 Admin endpoints (require auth + admin role):`);
+      console.log(`   - GET /admin/gallery`);
+      console.log(`   - POST /admin/gallery`);
+      console.log(`   - PUT /admin/gallery/:id`);
+      console.log(`   - DELETE /admin/gallery/:id`);
+      console.log(`   - GET /admin/members`);
+      console.log(`   - POST /admin/members`);
+      console.log(`   - PUT /admin/members/:id`);
+      console.log(`   - DELETE /admin/members/:id`);
+      console.log(`   - GET /admin/users`);
+      console.log(`   - POST /admin/users`);
+      console.log(`   - PUT /admin/users/:id`);
+      console.log(`   - DELETE /admin/users/:id`);
+    });
+  } catch (error) {
+    console.error('❌ Unable to start server:', error);
+    process.exit(1);
+  }
+};
 
 // Graceful shutdown
-process.on('SIGTERM', () => {
+process.on('SIGTERM', async () => {
   console.log('SIGTERM received, shutting down gracefully');
+  await sequelize.close();
   process.exit(0);
 });
 
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
   console.log('SIGINT received, shutting down gracefully');
+  await sequelize.close();
   process.exit(0);
 });
+
+// Start the server
+startServer();
 
 export default app;

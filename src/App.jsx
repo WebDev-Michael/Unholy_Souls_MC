@@ -10,6 +10,7 @@ import Login from './components/Login'
 import AdminPanel from './components/AdminPanel'
 import MemberManagement from './components/MemberManagement'
 import ProtectedRoute from './components/ProtectedRoute'
+import TestPage from './components/TestPage'
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
         <Route path="/meetthesouls" element={<MeetTheSouls />} />
         <Route path="/gallery" element={<Gallery />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/test" element={<TestPage />} />
         <Route path="/admin" element={
           <ProtectedRoute>
             <AdminPanel />
