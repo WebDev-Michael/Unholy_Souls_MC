@@ -17,13 +17,23 @@ const PORT = process.env.PORT || 5000;
 app.use(helmet());
 
 // CORS configuration
+const corsOrigins = [
+  'http://localhost:5173', // Vite default port
+  'http://localhost:5174', // Current frontend port
+  'http://localhost:5175', // Alternative Vite port
+  'http://localhost:3000', // Alternative React port
+  'https://unholy-souls-mc-frontend.onrender.com' // Render frontend
+];
+
+// Add custom frontend URL from environment if provided
+if (process.env.FRONTEND_URL) {
+  corsOrigins.push(process.env.FRONTEND_URL);
+}
+
+console.log('🔍 CORS Origins:', corsOrigins);
+
 app.use(cors({
-  origin: [
-    'http://localhost:5173', // Vite default port
-    'http://localhost:5174', // Current frontend port
-    'http://localhost:5175', // Alternative Vite port
-    'http://localhost:3000'  // Alternative React port
-  ],
+  origin: corsOrigins,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
