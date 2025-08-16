@@ -29,8 +29,9 @@ FRONTEND_URL=https://your-frontend-url.onrender.com
 The backend automatically handles database setup during deployment:
 
 1. **Automatic Migration**: Database schema is synced on startup
-2. **Automatic Seeding**: Initial data is created if the database is empty
+2. **Automatic Seeding**: Initial data is created from seeders if database is empty
 3. **Retry Logic**: Server will retry database connection up to 5 times
+4. **Seeder-Based**: Uses `./seeders/001_initial_data.js` for consistent initial data
 
 ## 📦 Deployment Scripts
 

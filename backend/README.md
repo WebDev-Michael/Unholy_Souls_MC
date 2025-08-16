@@ -33,9 +33,10 @@ npm start
 The backend automatically handles database setup during server startup:
 
 1. **Automatic Migration**: Database schema is synced on startup
-2. **Automatic Seeding**: Initial data is created if database is empty
+2. **Automatic Seeding**: Initial data is created from seeders if database is empty
 3. **Retry Logic**: Server retries database connection up to 5 times
 4. **Graceful Fallback**: Server starts even if database setup fails
+5. **Seeder-Based**: Uses `./seeders/001_initial_data.js` for consistent initial data
 
 ## 🌐 API Endpoints
 
