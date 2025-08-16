@@ -14,6 +14,27 @@ function MeetTheSouls() {
   const [ranks, setRanks] = useState([]);
   const [chapters, setChapters] = useState([]);
 
+  // Define all available ranks and chapters as fallbacks
+  const allRanks = [
+    "Prospect",
+    "Full Patch Member",
+    "Tailgunner",
+    "Enforcer",
+    "Warlord",
+    "Treasurer",
+    "Secretary",
+    "Road Captain",
+    "Sargeant at Arms",
+    "Vice President",
+    "President"
+  ];
+
+  const allChapters = [
+    "Dockside",
+    "Bay City",
+    "National"
+  ];
+
   // Load members and filter options
   useEffect(() => {
     const loadData = async () => {
@@ -21,17 +42,35 @@ function MeetTheSouls() {
         setLoading(true);
         const [membersData, ranksData, chaptersData] = await Promise.all([
           membersAPI.getAll(),
-          membersAPI.getRanks(),
-          membersAPI.getChapters()
+          membersAPI.getRanks().catch(() => []), // Fallback to empty array if API fails
+          membersAPI.getChapters().catch(() => []) // Fallback to empty array if API fails
         ]);
         
         setMembers(membersData);
-        setRanks(ranksData);
-        setChapters(chaptersData);
+        
+        // Use API data if available, otherwise use fallback arrays
+        if (ranksData && ranksData.length > 0) {
+          setRanks(ranksData);
+        } else {
+          // Convert to the format expected by the component
+          setRanks(allRanks.map(rank => ({ rank, count: 0 })));
+        }
+        
+        if (chaptersData && chaptersData.length > 0) {
+          setChapters(chaptersData);
+        } else {
+          // Convert to the format expected by the component
+          setChapters(allChapters.map(chapter => ({ chapter, count: 0 })));
+        }
+        
         setError(null);
       } catch (err) {
         console.error('Error loading members:', err);
         setError('Failed to load members. Please try again later.');
+        
+        // Set fallback data even if there's an error
+        setRanks(allRanks.map(rank => ({ rank, count: 0 })));
+        setChapters(allChapters.map(chapter => ({ chapter, count: 0 })));
       } finally {
         setLoading(false);
       }
@@ -134,7 +173,7 @@ function MeetTheSouls() {
                 placeholder="Search members..."
                 value={filters.search}
                 onChange={(e) => handleFilterChange('search', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-3 sm:px-4 py-2 bg-gray-700/60 border border-amber-500/30 rounded-lg text-white focus:border-amber-500/50 focus:outline-none transition-colors duration-200 text-sm sm:text-base"
               />
             </div>
 
@@ -146,11 +185,11 @@ function MeetTheSouls() {
               <select
                 value={filters.rank}
                 onChange={(e) => handleFilterChange('rank', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-3 sm:px-4 py-2 bg-gray-700/60 border border-amber-500/30 rounded-lg text-white focus:border-amber-500/50 focus:outline-none transition-colors duration-200 text-sm sm:text-base"
               >
                 <option value="">All Ranks</option>
-                {ranks.map((rank, index) => (
-                  <option key={index} value={rank}>{rank}</option>
+                {ranks.map((rankObj, index) => (
+                  <option key={index} value={rankObj.rank}>{rankObj.rank}</option>
                 ))}
               </select>
             </div>
@@ -163,11 +202,11 @@ function MeetTheSouls() {
               <select
                 value={filters.chapter}
                 onChange={(e) => handleFilterChange('chapter', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-3 sm:px-4 py-2 bg-gray-700/60 border border-amber-500/30 rounded-lg text-white focus:border-amber-500/50 focus:outline-none transition-colors duration-200 text-sm sm:text-base"
               >
                 <option value="">All Chapters</option>
-                {chapters.map((chapter, index) => (
-                  <option key={index} value={chapter}>{chapter}</option>
+                {chapters.map((chapterObj, index) => (
+                  <option key={index} value={chapterObj.chapter}>{chapterObj.chapter}</option>
                 ))}
               </select>
             </div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import MemberForm from './MemberForm';
-import { membersAPI } from '../services/api';
+import { adminAPI, membersAPI } from '../services/api';
 
 function MemberManagement() {
   const { logout } = useAuth();
@@ -22,7 +22,7 @@ function MemberManagement() {
       try {
         setLoading(true);
         const [membersData, ranksData, chaptersData] = await Promise.all([
-          membersAPI.getAll(),
+          adminAPI.getMembers(),
           membersAPI.getRanks(),
           membersAPI.getChapters()
         ]);
@@ -44,7 +44,7 @@ function MemberManagement() {
 
   const handleAddMember = async (newMember) => {
     try {
-      const createdMember = await membersAPI.create(newMember);
+      const createdMember = await adminAPI.createMember(newMember);
       setMembers(prev => [createdMember, ...prev]);
       setShowAddForm(false);
     } catch (err) {
@@ -54,20 +54,47 @@ function MemberManagement() {
   };
 
   const handleEditMember = (member) => {
+    console.log('🔍 handleEditMember called with member:', member);
+    console.log('🔍 Member ID:', member.id);
+    console.log('🔍 Full member object:', member);
+    
     setSelectedMember(member);
     setShowEditModal(true);
   };
 
   const handleSaveEdit = async (updatedMember) => {
     try {
-      const savedMember = await membersAPI.update(updatedMember.id, updatedMember);
+      console.log('🔍 handleSaveEdit called with:', updatedMember);
+      console.log('🔍 Member ID:', updatedMember.id);
+      console.log('🔍 Member data:', updatedMember);
+      
+      // Safety check: ensure member exists and has an ID
+      if (!updatedMember.id) {
+        console.error('❌ No member ID provided for update');
+        alert('Cannot update member: No ID provided. Please refresh and try again.');
+        return;
+      }
+      
+      // Check if member still exists in current state
+      const existingMember = members.find(m => m.id === updatedMember.id);
+      if (!existingMember) {
+        console.error('❌ Member no longer exists in current state');
+        alert('Member no longer exists. Please refresh the page.');
+        return;
+      }
+      
+      console.log('✅ Member exists, proceeding with update...');
+      
+      const savedMember = await adminAPI.updateMember(updatedMember.id, updatedMember);
+      console.log('✅ Member updated successfully:', savedMember);
+      
       setMembers(prev => prev.map(member => 
         member.id === updatedMember.id ? savedMember : member
       ));
       setShowEditModal(false);
       setSelectedMember(null);
     } catch (err) {
-      console.error('Error updating member:', err);
+      console.error('❌ Error updating member:', err);
       alert('Failed to update member. Please try again.');
     }
   };
@@ -75,7 +102,7 @@ function MemberManagement() {
   const handleDeleteMember = async (memberId) => {
     if (window.confirm('Are you sure you want to delete this member? This action cannot be undone.')) {
       try {
-        await membersAPI.delete(memberId);
+        await adminAPI.deleteMember(memberId);
         setMembers(prev => prev.filter(member => member.id !== memberId));
       } catch (err) {
         console.error('Error deleting member:', err);
@@ -237,8 +264,8 @@ function MemberManagement() {
                 className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
               >
                 <option value="all">All Chapters</option>
-                {chapters.map((chapter, index) => (
-                  <option key={index} value={chapter}>{chapter}</option>
+                {chapters.map((chapterObj, index) => (
+                  <option key={index} value={chapterObj.chapter}>{chapterObj.chapter}</option>
                 ))}
               </select>
             </div>

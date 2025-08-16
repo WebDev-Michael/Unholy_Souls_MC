@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-function MemberForm({ member, onSubmit, onCancel, chapters, ranks, isEdit = false }) {
+function MemberForm({ member, onSave, onCancel, chapters, ranks, isEditing = false }) {
   const [formData, setFormData] = useState({
     name: '',
     roadname: '',
@@ -10,19 +10,37 @@ function MemberForm({ member, onSubmit, onCancel, chapters, ranks, isEdit = fals
     image: ''
   });
 
+  // Monitor form data changes for debugging
+  useEffect(() => {
+    if (isEditing) {
+      console.log('🔍 Form data changed:', formData);
+      console.log('🔍 Form data ID:', formData.id);
+    }
+  }, [formData, isEditing]);
+
   // Initialize form with member data if editing
   useEffect(() => {
-    if (member && isEdit) {
-      setFormData({
+    console.log('🔍 MemberForm useEffect triggered');
+    console.log('🔍 isEditing:', isEditing);
+    console.log('🔍 member prop:', member);
+    console.log('🔍 member.id:', member?.id);
+    
+    if (member && isEditing) {
+      console.log('✅ Setting form data for editing member:', member);
+      const initialFormData = {
         name: member.name || '',
         roadname: member.roadname || '',
         rank: member.rank || 'Full Patch Member',
         chapter: member.chapter || 'Dockside',
         bio: member.bio || '',
-        image: member.image || ''
-      });
+        image: member.image || '',
+        id: member.id // Explicitly include the ID
+      };
+      
+      console.log('✅ Initial form data set:', initialFormData);
+      setFormData(initialFormData);
     }
-  }, [member, isEdit]);
+  }, [member, isEditing]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -34,6 +52,12 @@ function MemberForm({ member, onSubmit, onCancel, chapters, ranks, isEdit = fals
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    console.log('🔍 Form submission started');
+    console.log('🔍 Current formData:', formData);
+    console.log('🔍 isEditing:', isEditing);
+    console.log('🔍 member object:', member);
+    console.log('🔍 member.id:', member?.id);
     
     // Validate required fields
     if (!formData.name.trim() || !formData.rank || !formData.chapter) {
@@ -50,21 +74,35 @@ function MemberForm({ member, onSubmit, onCancel, chapters, ranks, isEdit = fals
       image: formData.image.trim() || null // Convert empty string to null
     };
 
-    // If editing, preserve the ID
-    if (isEdit && member) {
+    // If editing, ALWAYS preserve the ID from multiple sources
+    if (isEditing && member && member.id) {
       cleanedData.id = member.id;
+      console.log('✅ Preserving member ID for edit from member object:', member.id);
+    } else if (isEditing && formData.id) {
+      cleanedData.id = formData.id;
+      console.log('✅ Preserving member ID for edit from form data:', formData.id);
+    } else if (isEditing) {
+      console.log('⚠️ No member ID found - isEditing:', isEditing, 'member:', member, 'formData.id:', formData.id);
+      alert('Cannot update member: No ID found. Please refresh and try again.');
+      return;
     }
 
-    onSubmit(cleanedData);
+    console.log('🔍 Final cleanedData being submitted:', cleanedData);
+    onSave(cleanedData);
   };
 
   return (
     <div className="bg-gray-800/80 rounded-lg p-6 border border-amber-500/30">
       <h3 className="text-xl font-semibold text-white mb-4">
-        {isEdit ? 'Edit Member' : 'Add New Member'}
+        {isEditing ? 'Edit Member' : 'Add New Member'}
       </h3>
       
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Hidden ID field to preserve member ID when editing */}
+        {isEditing && member && member.id && (
+          <input type="hidden" name="id" value={member.id} />
+        )}
+        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Name */}
           <div>
@@ -109,8 +147,8 @@ function MemberForm({ member, onSubmit, onCancel, chapters, ranks, isEdit = fals
               onChange={handleInputChange}
               className="w-full px-3 py-2 bg-gray-700/60 border border-amber-500/30 rounded-lg text-white focus:border-amber-500/50 focus:outline-none"
             >
-              {ranks.map(rank => (
-                <option key={rank} value={rank}>{rank}</option>
+              {ranks.map(rankObj => (
+                <option key={rankObj.rank} value={rankObj.rank}>{rankObj.rank}</option>
               ))}
             </select>
           </div>
@@ -127,8 +165,8 @@ function MemberForm({ member, onSubmit, onCancel, chapters, ranks, isEdit = fals
               onChange={handleInputChange}
               className="w-full px-3 py-2 bg-gray-700/60 border border-amber-500/30 rounded-lg text-white focus:border-amber-500/50 focus:outline-none"
             >
-              {chapters.map(chapter => (
-                <option key={chapter} value={chapter}>{chapter}</option>
+              {chapters.map(chapterObj => (
+                <option key={chapterObj.chapter} value={chapterObj.chapter}>{chapterObj.chapter}</option>
               ))}
             </select>
           </div>
@@ -180,7 +218,7 @@ function MemberForm({ member, onSubmit, onCancel, chapters, ranks, isEdit = fals
             type="submit"
             className="px-6 py-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white rounded-lg transition-all duration-200 font-medium"
           >
-            {isEdit ? 'Save Changes' : 'Add Member'}
+            {isEditing ? 'Save Changes' : 'Add Member'}
           </button>
         </div>
       </form>
