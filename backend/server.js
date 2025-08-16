@@ -56,7 +56,6 @@ const publicLimiter = rateLimit({
   },
   handler: (req, res) => {
     const clientIP = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || 'unknown';
-    console.log(`🚫 Rate limit exceeded for ${clientIP} on ${req.path}`);
     res.status(429).json({ 
       error: 'Too many requests from this IP, please try again later.',
       retryAfter: Math.ceil(parseInt(process.env.RATE_LIMIT_WINDOW) / 1000 / 60) || 15

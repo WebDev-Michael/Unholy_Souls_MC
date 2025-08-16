@@ -15,7 +15,7 @@ function MemberForm({ member, onSave, onCancel, chapters, ranks, isEditing = fal
     { rank: 'Treasurer' },
     { rank: 'Secretary' },
     { rank: 'Road Captain' },
-    { rank: 'Sargeant at Arms' },
+    { rank: 'Sergeant at Arms' },
     { rank: 'Vice President' },
     { rank: 'President' }
   ];
