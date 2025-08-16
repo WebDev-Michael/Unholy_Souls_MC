@@ -13,6 +13,9 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Trust proxy for Render deployment (fixes X-Forwarded-For header issues)
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet());
 
@@ -46,8 +49,14 @@ const publicLimiter = rateLimit({
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
+  // Better IP detection for proxy environments
+  keyGenerator: (req) => {
+    // Use X-Forwarded-For header if available, fallback to req.ip
+    return req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || 'unknown';
+  },
   handler: (req, res) => {
-    console.log(`🚫 Rate limit exceeded for ${req.ip} on ${req.path}`);
+    const clientIP = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || 'unknown';
+    console.log(`🚫 Rate limit exceeded for ${clientIP} on ${req.path}`);
     res.status(429).json({ 
       error: 'Too many requests from this IP, please try again later.',
       retryAfter: Math.ceil(parseInt(process.env.RATE_LIMIT_WINDOW) / 1000 / 60) || 15
@@ -60,7 +69,11 @@ const authLimiter = rateLimit({
   max: 10, // 10 login attempts per 15 minutes
   message: 'Too many authentication attempts, please try again later.',
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  // Better IP detection for proxy environments
+  keyGenerator: (req) => {
+    return req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || 'unknown';
+  }
 });
 
 const adminLimiter = rateLimit({
@@ -68,7 +81,11 @@ const adminLimiter = rateLimit({
   max: 200, // 200 requests per 15 minutes for admin endpoints
   message: 'Too many admin requests, please try again later.',
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  // Better IP detection for proxy environments
+  keyGenerator: (req) => {
+    return req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || 'unknown';
+  }
 });
 
 // Very permissive rate limiter for frequently accessed public endpoints
@@ -77,7 +94,11 @@ const frequentAccessLimiter = rateLimit({
   max: 5000, // 5000 requests per 15 minutes for frequently accessed endpoints
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  // Better IP detection for proxy environments
+  keyGenerator: (req) => {
+    return req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || 'unknown';
+  }
 });
 
 // Apply rate limiting selectively
@@ -93,7 +114,8 @@ app.use(morgan('combined'));
 
 // Request logging for debugging
 app.use((req, res, next) => {
-  console.log(`📡 ${req.method} ${req.path} - IP: ${req.ip} - User-Agent: ${req.get('User-Agent')?.substring(0, 50)}...`);
+  const clientIP = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || 'unknown';
+  console.log(`📡 ${req.method} ${req.path} - IP: ${clientIP} - User-Agent: ${req.get('User-Agent')?.substring(0, 50)}...`);
   next();
 });
 
