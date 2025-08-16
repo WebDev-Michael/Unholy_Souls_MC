@@ -31,7 +31,8 @@
     "knex": "^3.0.1",
     "morgan": "^1.10.0",
     "node-fetch": "^3.3.2",
-    "sqlite3": "^5.1.6"
+    "pg": "^8.11.3",
+    "sqlite3": "^5.1.7"
   },
   "devDependencies": {
     "jest": "^29.7.0",

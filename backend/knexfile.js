@@ -34,16 +34,35 @@ export default {
   },
 
   production: {
-    client: 'sqlite3',
+    client: 'postgresql',
     connection: {
-      filename: path.join(__dirname, 'data', 'production.sqlite3')
+      host: process.env.DB_HOST,
+      port: process.env.DB_PORT || 5432,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME,
+      ssl: process.env.NODE_ENV === 'production' ? { 
+        rejectUnauthorized: false,
+        sslmode: 'require'
+      } : false
     },
-    useNullAsDefault: true,
     migrations: {
       directory: path.join(__dirname, 'migrations')
     },
     seeds: {
       directory: path.join(__dirname, 'seeds')
-    }
+    },
+    pool: {
+      min: 2,
+      max: 10,
+      acquireTimeoutMillis: 30000,
+      createTimeoutMillis: 30000,
+      destroyTimeoutMillis: 5000,
+      idleTimeoutMillis: 30000,
+      reapIntervalMillis: 1000,
+      createRetryIntervalMillis: 100
+    },
+    acquireConnectionTimeout: 60000,
+    debug: false
   }
 };
