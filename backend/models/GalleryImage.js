@@ -38,13 +38,13 @@ class GalleryImage {
           this.where('title', 'like', `%${searchTerm}%`)
             .orWhere('description', 'like', `%${searchTerm}%`)
             .orWhere('location', 'like', `%${searchTerm}%`)
-            .orWhereRaw("JSON_EXTRACT(tags, '$[*]') LIKE ?", [`%${searchTerm}%`])
-            .orWhereRaw("JSON_EXTRACT(members, '$[*]') LIKE ?", [`%${searchTerm}%`]);
+            .orWhereRaw("tags LIKE ?", [`%${searchTerm}%`])
+            .orWhereRaw("members LIKE ?", [`%${searchTerm}%`]);
         });
       }
 
       if (filters.member) {
-        query = query.whereRaw("JSON_EXTRACT(members, '$[*]') LIKE ?", [`%${filters.member}%`]);
+        query = query.whereRaw("members LIKE ?", [`%${filters.member}%`]);
       }
 
       if (filters.startDate && filters.endDate) {
@@ -84,20 +84,30 @@ class GalleryImage {
   // Create new image
   static async create(imageData) {
     try {
-      // Ensure tags and members are stored as JSON strings
+      console.log('🔍 GalleryImage.create called with data:', imageData);
+      
+      // Ensure tags and members are stored as JSON strings for SQLite
       const dataToInsert = {
         ...imageData,
         tags: Array.isArray(imageData.tags) ? JSON.stringify(imageData.tags) : imageData.tags,
         members: Array.isArray(imageData.members) ? JSON.stringify(imageData.members) : imageData.members
       };
 
-      const [newImage] = await db('gallery_images')
-        .insert(dataToInsert)
-        .returning('*');
+      console.log('🔍 Data to insert:', dataToInsert);
+
+      // SQLite compatible insert
+      const [insertedId] = await db('gallery_images').insert(dataToInsert);
+      
+      console.log('🔍 Inserted ID:', insertedId);
+      
+      // Fetch the newly created image
+      const [newImage] = await db('gallery_images').where('id', insertedId);
+      
+      console.log('🔍 New image fetched:', newImage);
       
       return new GalleryImage(newImage);
     } catch (error) {
-      console.error('Error in GalleryImage.create:', error);
+      console.error('❌ Error in GalleryImage.create:', error);
       throw error;
     }
   }
@@ -105,7 +115,9 @@ class GalleryImage {
   // Update image
   async update(updateData) {
     try {
-      // Ensure tags and members are stored as JSON strings
+      console.log('🔍 GalleryImage.update called with data:', updateData);
+      
+      // Ensure tags and members are stored as JSON strings for SQLite
       const dataToUpdate = {
         ...updateData,
         tags: Array.isArray(updateData.tags) ? JSON.stringify(updateData.tags) : updateData.tags,
@@ -113,16 +125,21 @@ class GalleryImage {
         updated_at: new Date()
       };
 
-      const [updatedImage] = await db('gallery_images')
-        .where('id', this.id)
-        .update(dataToUpdate)
-        .returning('*');
+      console.log('🔍 Data to update:', dataToUpdate);
+
+      // SQLite compatible update
+      await db('gallery_images').where('id', this.id).update(dataToUpdate);
+      
+      // Fetch the updated image
+      const [updatedImage] = await db('gallery_images').where('id', this.id);
+      
+      console.log('🔍 Updated image fetched:', updatedImage);
       
       // Update current instance
       Object.assign(this, updatedImage);
       return this;
     } catch (error) {
-      console.error('Error in GalleryImage.update:', error);
+      console.error('❌ Error in GalleryImage.update:', error);
       throw error;
     }
   }
@@ -186,7 +203,7 @@ class GalleryImage {
   static async findByMember(memberName) {
     try {
       const images = await db('gallery_images')
-        .whereRaw("JSON_EXTRACT(members, '$[*]') LIKE ?", [`%${memberName}%`])
+        .whereRaw("members LIKE ?", [`%${memberName}%`])
         .orderBy('date', 'desc');
       
       return images.map(image => new GalleryImage(image));
@@ -200,7 +217,7 @@ class GalleryImage {
   static async findByTag(tag) {
     try {
       const images = await db('gallery_images')
-        .whereRaw("JSON_EXTRACT(tags, '$[*]') LIKE ?", [`%${tag}%`])
+        .whereRaw("tags LIKE ?", [`%${tag}%`])
         .orderBy('date', 'desc');
       
       return images.map(image => new GalleryImage(image));
@@ -262,8 +279,8 @@ class GalleryImage {
           this.where('title', 'like', `%${searchTerm}%`)
             .orWhere('description', 'like', `%${searchTerm}%`)
             .orWhere('location', 'like', `%${searchTerm}%`)
-            .orWhereRaw("JSON_EXTRACT(tags, '$[*]') LIKE ?", [`%${searchTerm}%`])
-            .orWhereRaw("JSON_EXTRACT(members, '$[*]') LIKE ?", [`%${searchTerm}%`]);
+            .orWhereRaw("tags LIKE ?", [`%${searchTerm}%`])
+            .orWhereRaw("members LIKE ?", [`%${searchTerm}%`]);
         });
       }
 

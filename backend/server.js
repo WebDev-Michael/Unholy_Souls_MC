@@ -39,28 +39,41 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Simple authentication middleware
 const authenticateToken = (req, res, next) => {
+  console.log('🔐 authenticateToken middleware called for:', req.path);
+  console.log('🔐 Headers:', req.headers);
+  
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
   if (!token) {
+    console.log('❌ No token provided');
     return res.status(401).json({ error: 'Access token required' });
   }
 
   try {
+    console.log('🔐 Token found, verifying...');
     const secret = process.env.JWT_SECRET || 'your-secret-key';
     const decoded = jwt.verify(token, secret);
+    console.log('✅ Token verified, user:', decoded);
     req.user = decoded;
     next();
   } catch (error) {
+    console.log('❌ Token verification failed:', error.message);
     return res.status(403).json({ error: 'Invalid token' });
   }
 };
 
 // Admin role check middleware
 const requireAdmin = (req, res, next) => {
+  console.log('👑 requireAdmin middleware called');
+  console.log('👑 User:', req.user);
+  
   if (req.user.role !== 'admin') {
+    console.log('❌ User is not admin, role:', req.user.role);
     return res.status(403).json({ error: 'Admin access required' });
   }
+  
+  console.log('✅ User is admin, proceeding...');
   next();
 };
 
@@ -154,13 +167,21 @@ app.post('/logout', (req, res) => {
 // Gallery endpoint
 app.get('/gallery', async (req, res) => {
   try {
+    console.log('🔍 GET /gallery - Request received');
+    console.log('🔍 Query params:', req.query);
+    
     const { category, featured, search, member, page, itemsPerPage } = req.query;
     const filters = { category, featured, search, member, page, itemsPerPage };
     
+    console.log('🔍 Filters applied:', filters);
+    console.log('🔍 Calling GalleryImage.findAll...');
+    
     const images = await GalleryImage.findAll(filters);
+    console.log('✅ Gallery images fetched successfully, count:', images.length);
+    
     res.json(images.map(image => image.toJSON()));
   } catch (error) {
-    console.error('Error fetching gallery images:', error);
+    console.error('❌ Error fetching gallery images:', error);
     res.status(500).json({ error: 'Failed to fetch gallery images' });
   }
 });
@@ -168,10 +189,15 @@ app.get('/gallery', async (req, res) => {
 // Gallery categories endpoint
 app.get('/gallery/categories', async (req, res) => {
   try {
+    console.log('🔍 GET /gallery/categories - Request received');
+    console.log('🔍 Calling GalleryImage.getCategories...');
+    
     const categories = await GalleryImage.getCategories();
+    console.log('✅ Gallery categories fetched successfully:', categories);
+    
     res.json(categories);
   } catch (error) {
-    console.error('Error fetching categories:', error);
+    console.error('❌ Error fetching categories:', error);
     res.status(500).json({ error: 'Failed to fetch categories' });
   }
 });
@@ -213,7 +239,12 @@ app.get('/meetthesouls/chapters', async (req, res) => {
 });
 
 // Admin routes - require authentication and admin role
-app.use('/admin', authenticateToken, requireAdmin);
+app.use('/admin', (req, res, next) => {
+  console.log('🚦 Admin middleware triggered for:', req.method, req.path);
+  console.log('🚦 Request headers:', req.headers);
+  console.log('🚦 Request body:', req.body);
+  next();
+}, authenticateToken, requireAdmin);
 
 // Admin Gallery Management
 app.get('/admin/gallery', async (req, res) => {
@@ -228,18 +259,34 @@ app.get('/admin/gallery', async (req, res) => {
 
 app.post('/admin/gallery', async (req, res) => {
   try {
+    console.log('🔍 POST /admin/gallery - Request received');
+    console.log('🔍 Headers:', req.headers);
+    console.log('🔍 Body:', req.body);
+    console.log('🔍 User:', req.user);
+    
     const { title, category, description, imageUrl, tags, featured, location, members, date } = req.body;
     
+    console.log('🔍 Extracted data:', { title, category, description, imageUrl, tags, featured, location, members, date });
+    
     if (!title || !category || !description || !imageUrl) {
+      console.log('❌ Validation failed - missing required fields');
+      console.log('❌ Required: title, category, description, imageUrl');
+      console.log('❌ Received:', { title: !!title, category: !!category, description: !!description, imageUrl: !!imageUrl });
       return res.status(400).json({ error: 'Title, category, description, and imageUrl are required' });
     }
 
+    console.log('✅ Validation passed, creating gallery image...');
+    
     const newImage = await GalleryImage.create({ 
       title, category, description, imageUrl, tags, featured, location, members, date 
     });
+    
+    console.log('✅ Gallery image created successfully:', newImage.toJSON());
     res.status(201).json(newImage.toJSON());
   } catch (error) {
-    console.error('Error creating gallery image:', error);
+    console.error('❌ Error creating gallery image:', error);
+    console.error('❌ Error details:', error.message);
+    console.error('❌ Error stack:', error.stack);
     res.status(500).json({ error: 'Failed to create image' });
   }
 });
@@ -292,34 +339,57 @@ app.get('/admin/members', async (req, res) => {
 
 app.post('/admin/members', async (req, res) => {
   try {
+    console.log('🔍 POST /admin/members - Request received');
+    console.log('🔍 Headers:', req.headers);
+    console.log('🔍 Body:', req.body);
+    console.log('🔍 User:', req.user);
+    
     const { name, roadname, rank, chapter, bio, image } = req.body;
     
     if (!name || !rank || !chapter || !bio) {
+      console.log('❌ Validation failed - missing required fields');
       return res.status(400).json({ error: 'Name, rank, chapter, and bio are required' });
     }
 
+    console.log('✅ Validation passed, creating member...');
     const newMember = await Member.create({ name, roadname, rank, chapter, bio, image });
+    console.log('✅ Member created successfully:', newMember.toJSON());
+    
     res.status(201).json(newMember.toJSON());
   } catch (error) {
-    console.error('Error creating member:', error);
+    console.error('❌ Error creating member:', error);
     res.status(500).json({ error: 'Failed to create member' });
   }
 });
 
 app.put('/admin/members/:id', async (req, res) => {
   try {
+    console.log('🔍 PUT /admin/members/:id - Request received');
+    console.log('🔍 URL params:', req.params);
+    console.log('🔍 Request body:', req.body);
+    console.log('🔍 User:', req.user);
+    
     const { id } = req.params;
     const updateData = req.body;
+    
+    console.log('🔍 Looking for member with ID:', id);
+    console.log('🔍 Update data:', updateData);
 
     const member = await Member.findById(id);
     if (!member) {
+      console.log('❌ Member not found with ID:', id);
       return res.status(404).json({ error: 'Member not found' });
     }
+    
+    console.log('✅ Member found:', member.toJSON());
+    console.log('✅ Updating member...');
 
     const updatedMember = await member.update(updateData);
+    console.log('✅ Member updated successfully:', updatedMember.toJSON());
+    
     res.json(updatedMember.toJSON());
   } catch (error) {
-    console.error('Error updating member:', error);
+    console.error('❌ Error updating member:', error);
     res.status(500).json({ error: 'Failed to update member' });
   }
 });
