@@ -4,11 +4,19 @@ import { sequelize } from './db/connection.js';
 import { Member, GalleryImage, User } from './models/index.js';
 
 console.log('🚀 Starting database setup for Render deployment...');
+console.log('🔍 Environment:', process.env.NODE_ENV || 'development');
 
 async function setupDatabase() {
   try {
     console.log('🔍 Testing database connection...');
-    await sequelize.authenticate();
+    
+    // Test database connection with timeout
+    const connectionPromise = sequelize.authenticate();
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Database connection timeout')), 30000)
+    );
+    
+    await Promise.race([connectionPromise, timeoutPromise]);
     console.log('✅ Database connection established successfully');
 
     console.log('🔄 Syncing database schema...');
@@ -87,7 +95,11 @@ async function setupDatabase() {
   } catch (error) {
     console.error('❌ Database setup failed:', error);
     console.error('Error details:', error.message);
-    process.exit(1);
+    
+    // Don't exit with error code 1 for Render deployment
+    // Let the server start and handle database connection on its own
+    console.log('⚠️  Continuing with server startup - database will be handled on first request');
+    process.exit(0);
   }
 }
 

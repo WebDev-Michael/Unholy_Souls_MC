@@ -752,6 +752,72 @@ const startServer = async () => {
       try {
         await sequelize.sync({ force: false });
         console.log('✅ Database synchronized successfully.');
+        
+        // Try to seed initial data if tables are empty
+        try {
+          const { Member, GalleryImage, User } = await import('./models/index.js');
+          
+          const memberCount = await Member.count();
+          const imageCount = await GalleryImage.count();
+          const userCount = await User.count();
+          
+          if (memberCount === 0) {
+            console.log('📝 Creating initial members...');
+            await Member.bulkCreate([
+              {
+                name: 'John Doe',
+                roadname: 'Road Warrior',
+                rank: 'President',
+                chapter: 'Dockside',
+                bio: 'Founding member and current President of Unholy Souls MC.',
+                join_date: new Date('2020-01-01'),
+                is_active: true
+              },
+              {
+                name: 'Jane Smith',
+                roadname: 'Iron Maiden',
+                rank: 'Vice President',
+                chapter: 'Dockside',
+                bio: 'Vice President and founding member.',
+                join_date: new Date('2020-01-01'),
+                is_active: true
+              }
+            ]);
+            console.log('✅ Initial members created');
+          }
+          
+          if (imageCount === 0) {
+            console.log('🖼️  Creating initial gallery images...');
+            await GalleryImage.bulkCreate([
+              {
+                title: 'Club House',
+                category: 'Other',
+                description: 'Our main club house where brothers gather.',
+                image_url: 'https://via.placeholder.com/800x600/333333/FFFFFF?text=Club+House',
+                tags: ['clubhouse', 'brotherhood'],
+                featured: true,
+                date: new Date()
+              }
+            ]);
+            console.log('✅ Initial gallery images created');
+          }
+          
+          if (userCount === 0) {
+            console.log('👤 Creating initial admin user...');
+            await User.create({
+              username: 'admin',
+              email: 'admin@unholysoulsmc.com',
+              password: 'admin123', // This should be changed in production
+              role: 'admin',
+              isActive: true
+            });
+            console.log('✅ Initial admin user created (username: admin, password: admin123)');
+          }
+          
+        } catch (seedError) {
+          console.log('⚠️ Database seeding failed, but continuing with server startup:', seedError.message);
+        }
+        
       } catch (syncError) {
         console.log('⚠️ Database sync failed, but continuing with server startup:', syncError.message);
       }

@@ -37,8 +37,8 @@ The backend automatically handles database setup during deployment:
 ### Available Scripts
 
 - `npm run render:deploy` - Full deployment with database setup
-- `npm run render:build` - Build and database setup only
-- `npm run db:setup` - Database migration and seeding
+- `npm run render:build` - Build only (database setup happens on startup)
+- `npm run db:setup` - Manual database setup (for development)
 - `npm run db:migrate` - Database schema sync only
 - `npm run db:seed` - Seed data only
 
@@ -60,10 +60,12 @@ npm start
 
 1. **Build Phase**: 
    - Installs dependencies
-   - Runs database setup (migration + seeding)
+   - No database operations (prevents build failures)
 
 2. **Start Phase**:
-   - Connects to database
+   - Connects to database with retry logic
+   - Syncs database schema
+   - Seeds initial data if tables are empty
    - Starts Express server
    - Health check available at `/health`
 

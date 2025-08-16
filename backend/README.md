@@ -20,20 +20,22 @@ npm start
 
 - `npm start` - Start production server
 - `npm run dev` - Start development server with nodemon
-- `npm run db:setup` - Setup database (migrate + seed)
-- `npm run db:migrate` - Run database migrations
-- `npm run db:seed` - Seed database with initial data
+- `npm run db:setup` - Manual database setup (for development)
+- `npm run db:migrate` - Database schema sync only
+- `npm run db:seed` - Seed data only
 - `npm run db:reset` - Reset database (sync + seed)
+- `npm run db:start` - Database setup then start server
 - `npm run render:deploy` - Full deployment for Render
-- `npm run render:build` - Build and database setup for Render
+- `npm run render:build` - Build for Render (database setup on startup)
 
 ## 🗄️ Database Setup
 
-The backend automatically handles database setup:
+The backend automatically handles database setup during server startup:
 
 1. **Automatic Migration**: Database schema is synced on startup
 2. **Automatic Seeding**: Initial data is created if database is empty
 3. **Retry Logic**: Server retries database connection up to 5 times
+4. **Graceful Fallback**: Server starts even if database setup fails
 
 ## 🌐 API Endpoints
 
