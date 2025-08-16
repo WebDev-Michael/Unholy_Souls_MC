@@ -1,6 +1,34 @@
 import React, { useState, useEffect } from 'react';
 
 function MemberForm({ member, onSave, onCancel, chapters, ranks, isEditing = false }) {
+  // Fallback ranks array to ensure all required ranks are always available
+  const fallbackRanks = [
+    { rank: 'Prospect' },
+    { rank: 'Full Patch Member' },
+    { rank: 'Tailgunner' },
+    { rank: 'Enforcer' },
+    { rank: 'Warlord' },
+    { rank: 'Treasurer' },
+    { rank: 'Secretary' },
+    { rank: 'Road Captain' },
+    { rank: 'Sargeant at Arms' },
+    { rank: 'Vice President' },
+    { rank: 'President' }
+  ];
+
+  // Use provided ranks or fallback to ensure all ranks are available
+  const availableRanks = ranks && ranks.length > 0 ? ranks : fallbackRanks;
+
+  // Fallback chapters array to ensure all required chapters are always available
+  const fallbackChapters = [
+    { chapter: 'Dockside' },
+    { chapter: 'Bay City' },
+    { chapter: 'National' }
+  ];
+
+  // Use provided chapters or fallback to ensure all chapters are available
+  const availableChapters = chapters && chapters.length > 0 ? chapters : fallbackChapters;
+
   const [formData, setFormData] = useState({
     name: '',
     roadname: '',
@@ -147,7 +175,7 @@ function MemberForm({ member, onSave, onCancel, chapters, ranks, isEditing = fal
               onChange={handleInputChange}
               className="w-full px-3 py-2 bg-gray-700/60 border border-amber-500/30 rounded-lg text-white focus:border-amber-500/50 focus:outline-none"
             >
-              {ranks.map(rankObj => (
+              {availableRanks.map(rankObj => (
                 <option key={rankObj.rank} value={rankObj.rank}>{rankObj.rank}</option>
               ))}
             </select>
@@ -165,7 +193,7 @@ function MemberForm({ member, onSave, onCancel, chapters, ranks, isEditing = fal
               onChange={handleInputChange}
               className="w-full px-3 py-2 bg-gray-700/60 border border-amber-500/30 rounded-lg text-white focus:border-amber-500/50 focus:outline-none"
             >
-              {chapters.map(chapterObj => (
+              {availableChapters.map(chapterObj => (
                 <option key={chapterObj.chapter} value={chapterObj.chapter}>{chapterObj.chapter}</option>
               ))}
             </select>
