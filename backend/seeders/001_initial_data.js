@@ -42,7 +42,7 @@ export async function up() {
         name: 'Chris "Ghost" Brown',
         roadname: 'Ghost',
         rank: 'Full Patch Member',
-        chapter: 'Club',
+        chapter: 'Bay City',
         bio: 'Dedicated member known for his mechanical skills and loyalty to the club.',
         image: 'https://example.com/images/ghost.jpg',
         joinDate: new Date('2020-04-01'),
