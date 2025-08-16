@@ -17,7 +17,7 @@ function MemberForm({ member, onSave, onCancel, chapters, ranks, isEditing = fal
   ];
 
   // Use provided ranks or fallback to ensure all ranks are available
-  const availableRanks = ranks && ranks.length > 0 ? ranks : fallbackRanks;
+  const availableRanks = ranks && fallbackRanks;
 
   // Fallback chapters array to ensure all required chapters are always available
   const fallbackChapters = [
@@ -27,7 +27,7 @@ function MemberForm({ member, onSave, onCancel, chapters, ranks, isEditing = fal
   ];
 
   // Use provided chapters or fallback to ensure all chapters are available
-  const availableChapters = chapters && chapters.length > 0 ? chapters : fallbackChapters;
+  const availableChapters = chapters && fallbackChapters;
 
   const [formData, setFormData] = useState({
     name: '',
