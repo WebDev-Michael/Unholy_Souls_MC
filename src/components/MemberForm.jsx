@@ -4,7 +4,7 @@ function MemberForm({ member, onSave, onCancel, chapters, ranks, isEditing = fal
   const [formData, setFormData] = useState({
     name: '',
     roadname: '',
-    rank: 'Full Patch Member',
+    rank: 'Prospect',
     chapter: 'Dockside',
     bio: '',
     image: ''
@@ -30,7 +30,7 @@ function MemberForm({ member, onSave, onCancel, chapters, ranks, isEditing = fal
       const initialFormData = {
         name: member.name || '',
         roadname: member.roadname || '',
-        rank: member.rank || 'Full Patch Member',
+        rank: member.rank || 'Prospect',
         chapter: member.chapter || 'Dockside',
         bio: member.bio || '',
         image: member.image || '',
