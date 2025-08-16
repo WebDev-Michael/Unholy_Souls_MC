@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 function Login() {
@@ -7,6 +8,7 @@ function Login() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -14,8 +16,11 @@ function Login() {
     setIsLoading(true);
 
     try {
-      const result = login(username, password);
-      if (!result.success) {
+      const result = await login(username, password);
+      if (result.success) {
+        // Redirect to members page after successful login
+        navigate('/members');
+      } else {
         setError(result.error);
       }
     } catch (err) {
@@ -95,11 +100,6 @@ function Login() {
           </div>
         </form>
 
-        <div className="text-center">
-          <p className="text-xs text-gray-500">
-            Default credentials: admin / unholysouls2025
-          </p>
-        </div>
       </div>
     </div>
   );

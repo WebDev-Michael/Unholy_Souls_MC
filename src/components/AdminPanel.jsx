@@ -1,29 +1,59 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import ImageUpload from './ImageUpload';
-import { imageDatabase, addImageToDatabase } from '../data/imageDatabase';
+import { adminAPI } from '../services/api';
 
 function AdminPanel() {
   const { logout } = useAuth();
   const [showUpload, setShowUpload] = useState(false);
-  const [images, setImages] = useState(imageDatabase);
+  const [images, setImages] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const handleImageUpload = (newImage) => {
-    setImages(prev => [newImage, ...prev]);
-    setShowUpload(false);
-    // Add to the main database
-    addImageToDatabase(newImage);
+
+  // Load images
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const imagesData = await adminAPI.getGallery();
+        
+        setImages(imagesData);
+        setError(null);
+      } catch (err) {
+        console.error('Error loading admin data:', err);
+        setError('Failed to load admin data. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  const handleImageUpload = async (newImage) => {
+    try {
+      const uploadedImage = await adminAPI.createGalleryImage(newImage);
+      setImages(prev => [uploadedImage, ...prev]);
+      setShowUpload(false);
+    } catch (err) {
+      console.error('Error uploading image:', err);
+      alert('Failed to upload image. Please try again.');
+    }
   };
 
-  const handleDeleteImage = (imageId) => {
+  const handleDeleteImage = async (imageId) => {
     if (window.confirm('Are you sure you want to delete this image?')) {
-      setImages(prev => prev.filter(img => img.id !== imageId));
-      // In a real app, you'd also update localStorage or send to server
-      const updatedImages = images.filter(img => img.id !== imageId);
-      localStorage.setItem('uploadedImages', JSON.stringify(updatedImages));
+      try {
+        await adminAPI.deleteGalleryImage(imageId);
+        setImages(prev => prev.filter(img => img.id !== imageId));
+      } catch (err) {
+        console.error('Error deleting image:', err);
+        alert('Failed to delete image. Please try again.');
+      }
     }
   };
 
@@ -32,14 +62,18 @@ function AdminPanel() {
     setShowEditModal(true);
   };
 
-  const handleSaveEdit = (updatedImage) => {
-    setImages(prev => prev.map(img => 
-      img.id === updatedImage.id ? updatedImage : img
-    ));
-    setShowEditModal(false);
-    setSelectedImage(null);
-    // In a real app, you'd also update localStorage or send to server
-    localStorage.setItem('uploadedImages', JSON.stringify(images));
+  const handleSaveEdit = async (updatedImage) => {
+    try {
+              const savedImage = await adminAPI.updateGalleryImage(updatedImage.id, updatedImage);
+      setImages(prev => prev.map(img => 
+        img.id === updatedImage.id ? savedImage : img
+      ));
+      setShowEditModal(false);
+      setSelectedImage(null);
+    } catch (err) {
+      console.error('Error updating image:', err);
+      alert('Failed to update image. Please try again.');
+    }
   };
 
   const handleLogout = () => {
@@ -47,6 +81,36 @@ function AdminPanel() {
       logout();
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen py-8 sm:py-12 px-4 sm:px-6 lg:px-8 pt-30 sm:pt-32">
+        <div className="max-w-7xl mx-auto text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-amber-500 mx-auto"></div>
+          <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">Loading admin panel...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen py-8 sm:py-12 px-4 sm:px-6 lg:px-8 pt-30 sm:pt-32">
+        <div className="max-w-7xl mx-auto text-center">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            <p className="font-bold">Error</p>
+            <p>{error}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="mt-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen py-8 sm:py-12 px-4 sm:px-6 lg:px-8 pt-30 sm:pt-32">
@@ -56,10 +120,10 @@ function AdminPanel() {
           <div className="flex justify-between items-center mb-6">
             <div>
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white tracking-tight">
-                Admin Panel
+                Gallery Management
               </h1>
               <p className="text-lg sm:text-xl md:text-2xl text-amber-300 mt-2 font-medium">
-                Gallery Management
+                Manage Club Photos
               </p>
             </div>
             <button
@@ -102,13 +166,13 @@ function AdminPanel() {
             <div className="flex flex-wrap gap-4">
               <button
                 onClick={() => setShowUpload(!showUpload)}
-                className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white rounded-lg transition-all duration-200 font-medium"
+                className="px-6 py-3 bg-gradient-to-r from-amber-400 to-orange-600 hover:from-amber-400 hover:to-orange-700 text-white rounded-lg transition-all duration-200 font-medium"
               >
                 {showUpload ? 'Cancel Upload' : 'Upload New Image'}
               </button>
               <Link
                 to="/members"
-                className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg transition-all duration-200 font-medium"
+                className="px-6 py-3 bg-gradient-to-r from-orange-600 to-amber-400 hover:from-orange-600 hover:to-amber-600 text-white rounded-lg transition-all duration-200 font-medium"
               >
                 Manage Members
               </Link>

@@ -1,156 +1,111 @@
 import React, { useState, useEffect } from 'react'
 import MemberCard from './MemberCard'
+import { membersAPI } from '../services/api'
 
 function MeetTheSouls() {
-  const [members, setMembers] = useState(() => {
-    // Try to load from localStorage first, fallback to default data
-    const saved = localStorage.getItem('unholySoulsMembers');
-    if (saved) {
-      return JSON.parse(saved);
-    }
-    // Default members data
-    return [
-      {
-        id: 1,
-        name: 'Don Tito',
-        roadname: 'Prez',
-        rank: 'National President',
-        chapter: 'Dockside',
-        bio: 'Don Tito is the president of the Unholy Souls MC. He is a great leader and a great friend.',
-        image: 'https://i.imgur.com/kzkgmmI.jpeg',
-      },
-      {
-        id: 2,
-        name: 'Ricky Lafluer',
-        roadname: 'Crash',
-        rank: 'National Vice President',
-        chapter: 'Dockside',
-        bio: 'Ricky Lafluer is the backbone of the club, handling operations and member relations with precision.',
-        image: 'https://i.imgur.com/RfAdXPS.png',
-      },
-      {
-        id: 3,
-        name: 'Ginge Thompson',
-        roadname: null,
-        rank: 'National Sergeant at Arms',
-        chapter: 'Dockside',
-        bio: 'Ginge is the Sergeant at Arms of the Unholy Souls MC. He is a great leader and a great friend.',
-        image: null,
-      },
-      {
-        id: 4,
-        name: 'Winston Oak',
-        roadname: 'Ace',
-        rank: 'President',
-        chapter: 'Dockside',
-        bio: 'Ace manages the club finances and ensures we stay on track with all our business ventures.',
-        image: 'https://i.imgur.com/sjQcAhU.png',
-      },
-      {
-        id: 5,
-        name: 'Astra Teach',
-        roadname: 'Tornado',
-        rank: 'Vice President',
-        chapter: 'Dockside',
-        bio: 'Astra ensures club security and maintains order during meetings and events.',
-        image: 'https://i.imgur.com/j1xNAWE.png',
-      },
-      {
-        id: 6,
-        name: 'Wyatt Teach',
-        roadname: 'Cowboy',
-        rank: 'Road Captain',
-        chapter: 'Dockside',
-        bio: 'Wyatt plans our rides and ensures everyone gets home safe after our adventures.',
-        image: 'https://i.imgur.com/0C1nZ3Z.jpeg',
-      },
-      {
-        id: 7,
-        name: 'Kait Williams',
-        roadname: 'Kitty',
-        rank: 'Secretary',
-        chapter: 'Dockside',
-        bio: 'The Secretary is responsible for making and keeping all club chapter records.',
-        image: 'https://i.imgur.com/Fp3uZGX.png',
-      },
-      {
-        id: 8,
-        name: 'Jackson Hayes',
-        roadname: 'Maverick',
-        rank: 'Enforcer',
-        chapter: 'Dockside',
-        bio: 'The Enforcer makes certain that the club laws and rules are followed by all members.',
-        image: 'https://i.imgur.com/p1v4My0.png',
-      },
-      {
-        id: 9,
-        name: 'Blaze Newman',
-        roadname: 'Ghost',
-        rank: 'Full Patch Member',
-        chapter: 'Dockside',
-        bio: 'A Member is also called a Patch Member or a Rider.',
-        image: 'https://i.imgur.com/GyARgKJ.png',
-      },
-      {
-        id: 10,
-        name: 'Merle Fell',
-        roadname: 'Reaper',
-        rank: 'President',
-        chapter: 'Bay City',
-        bio: 'Merle is the president of the Bay City Chapter.',
-        image: 'https://i.imgur.com/OLB0Ctk.jpeg',
-      },
-      {
-        id: 11,
-        name: 'Vikki Wesley',
-        roadname: 'Psycho',
-        rank: 'Treasurer',
-        chapter: 'Bay City',
-        bio: 'Vikki is the treasurer of the Bay City Chapter.',
-        image: 'https://i.imgur.com/hwiMwSE.png',
-      },
-      {
-        id: 12,
-        name: 'Bunny Frost',
-        roadname: 'Houdini',
-        rank: 'Enforcer',
-        chapter: 'Bay City',
-        bio: 'Bunny is the enforcer of the Bay City Chapter.',
-        image: 'https://imgur.com/MEkgy1v.png',
-      },
-      {
-        id: 13,
-        name: 'Michael Smith',
-        roadname: 'Lazy Eye',
-        rank: 'Full Patch Member',
-        chapter: 'Bay City',
-        bio: 'Michael is the full patch member of the Bay City Chapter.',
-        image: 'https://i.imgur.com/bcmg59b.jpeg',
-      },
-      {
-        id: 14,
-        name: 'Trent Carter',
-        roadname: 'Teabag',
-        rank: 'Full Patch Member',
-        chapter: 'Bay City',
-        bio: 'Trent is the full patch member of the Bay City Chapter.',
-        image: null,
-      }
-    ];
+  const [members, setMembers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [filters, setFilters] = useState({
+    rank: '',
+    chapter: '',
+    search: ''
   });
+  const [ranks, setRanks] = useState([]);
+  const [chapters, setChapters] = useState([]);
 
-  // Listen for changes in localStorage
+  // Load members and filter options
   useEffect(() => {
-    const handleStorageChange = () => {
-      const saved = localStorage.getItem('unholySoulsMembers');
-      if (saved) {
-        setMembers(JSON.parse(saved));
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const [membersData, ranksData, chaptersData] = await Promise.all([
+          membersAPI.getAll(),
+          membersAPI.getRanks(),
+          membersAPI.getChapters()
+        ]);
+        
+        setMembers(membersData);
+        setRanks(ranksData);
+        setChapters(chaptersData);
+        setError(null);
+      } catch (err) {
+        console.error('Error loading members:', err);
+        setError('Failed to load members. Please try again later.');
+      } finally {
+        setLoading(false);
       }
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    loadData();
   }, []);
+
+  // Filter members based on current filters
+  const filteredMembers = members.filter(member => {
+    // Apply rank filter
+    if (filters.rank && member.rank !== filters.rank) return false;
+    
+    // Apply chapter filter
+    if (filters.chapter && member.chapter !== filters.chapter) return false;
+    
+    // Apply search filter
+    if (filters.search && filters.search.trim()) {
+      const searchLower = filters.search.toLowerCase().trim();
+      return (
+        member.name.toLowerCase().includes(searchLower) ||
+        (member.roadname && member.roadname.toLowerCase().includes(searchLower)) ||
+        member.rank.toLowerCase().includes(searchLower) ||
+        member.chapter.toLowerCase().includes(searchLower) ||
+        (member.bio && member.bio.toLowerCase().includes(searchLower))
+      );
+    }
+    return true;
+  });
+
+  const handleFilterChange = (filterType, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [filterType]: value
+    }));
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      rank: '',
+      chapter: '',
+      search: ''
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen py-8 sm:py-12 px-4 sm:px-6 lg:px-8 pt-30 sm:pt-32">
+        <div className="max-w-7xl mx-auto text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-amber-500 mx-auto"></div>
+          <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">Loading members...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen py-8 sm:py-12 px-4 sm:px-6 lg:px-8 pt-30 sm:pt-32">
+        <div className="max-w-7xl mx-auto text-center">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            <p className="font-bold">Error</p>
+            <p>{error}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="mt-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen py-8 sm:py-12 px-4 sm:px-6 lg:px-8 pt-30 sm:pt-32">
@@ -166,12 +121,96 @@ function MeetTheSouls() {
           </p>
         </div>
 
-        {/* Members Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-          {members.map((member, index) => (
-            <MemberCard key={index} member={member} />
-          ))}
+        {/* Filters Section */}
+        <div className="bg-white dark:bg-gray-700/50 rounded-lg shadow-lg p-4 sm:p-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {/* Search */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Search
+              </label>
+              <input
+                type="text"
+                placeholder="Search members..."
+                value={filters.search}
+                onChange={(e) => handleFilterChange('search', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+              />
+            </div>
+
+            {/* Rank Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Rank
+              </label>
+              <select
+                value={filters.rank}
+                onChange={(e) => handleFilterChange('rank', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+              >
+                <option value="">All Ranks</option>
+                {ranks.map((rank, index) => (
+                  <option key={index} value={rank}>{rank}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Chapter Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Chapter
+              </label>
+              <select
+                value={filters.chapter}
+                onChange={(e) => handleFilterChange('chapter', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+              >
+                <option value="">All Chapters</option>
+                {chapters.map((chapter, index) => (
+                  <option key={index} value={chapter}>{chapter}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Clear Filters */}
+            <div className="flex items-end">
+              <button
+                onClick={clearFilters}
+                className="w-full px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md transition-colors"
+              >
+                Clear Filters
+              </button>
+            </div>
+          </div>
         </div>
+
+        {/* Results Count */}
+        <div className="mb-6">
+          <p className="text-gray-600 dark:text-gray-400">
+            Showing {filteredMembers.length} of {members.length} members
+          </p>
+        </div>
+
+        {/* Members Grid */}
+        {filteredMembers.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+            {filteredMembers.map((member, index) => (
+              <MemberCard key={member.id || index} member={member} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-lg text-gray-600 dark:text-gray-400">
+              No members found matching your criteria.
+            </p>
+            <button
+              onClick={clearFilters}
+              className="mt-4 px-6 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-md transition-colors"
+            >
+              Clear Filters
+            </button>
+          </div>
+        )}
 
         {/* Call to Action */}
         <div className="text-center mt-12 sm:mt-16">

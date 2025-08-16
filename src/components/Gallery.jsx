@@ -1,30 +1,60 @@
-import React, { useState } from "react";
-import { imageDatabase, categories, getImagesByCategory } from "../data/imageDatabase";
+import React, { useState, useEffect } from "react";
+import { galleryAPI } from "../services/api";
 
 function Gallery() {
+  const [images, setImages] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
-  const [filteredImages, setFilteredImages] = useState(imageDatabase);
+  const [filteredImages, setFilteredImages] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Load images and categories
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const [imagesData, categoriesData] = await Promise.all([
+          galleryAPI.getAll(),
+          galleryAPI.getCategories()
+        ]);
+        
+        setImages(imagesData);
+        setCategories(categoriesData);
+        setFilteredImages(imagesData);
+        setError(null);
+      } catch (err) {
+        console.error('Error loading gallery:', err);
+        setError('Failed to load gallery. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
   // Filter and search images
   const handleFilter = () => {
-    let filtered = imageDatabase;
+    let filtered = images;
 
     // Apply category filter first
     if (selectedCategory !== "all") {
-      filtered = getImagesByCategory(selectedCategory);
+      filtered = filtered.filter(img => img.category === selectedCategory);
     }
 
     // Apply search filter to the already filtered results
     if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase();
       filtered = filtered.filter(img => 
-        img.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        img.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        img.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        img.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        img.members.some(member => member.toLowerCase().includes(searchTerm.toLowerCase()))
+        img.title.toLowerCase().includes(searchLower) ||
+        img.description.toLowerCase().includes(searchLower) ||
+        (img.tags && Array.isArray(img.tags) && img.tags.some(tag => tag.toLowerCase().includes(searchLower))) ||
+        (img.location && img.location.toLowerCase().includes(searchLower)) ||
+        (img.members && Array.isArray(img.members) && img.members.some(member => member.toLowerCase().includes(searchLower)))
       );
     }
 
@@ -47,7 +77,7 @@ function Gallery() {
   const clearFilters = () => {
     setSelectedCategory("all");
     setSearchTerm("");
-    setFilteredImages(imageDatabase);
+    setFilteredImages(images);
   };
 
   // Open modal with selected image
@@ -63,12 +93,12 @@ function Gallery() {
   };
 
   // Initial filter on component mount
-  React.useEffect(() => {
+  useEffect(() => {
     handleFilter();
   });
 
   // Close modal on escape key
-  React.useEffect(() => {
+  useEffect(() => {
     const handleEscape = (e) => {
       if (e.key === 'Escape') {
         closeModal();
@@ -105,7 +135,7 @@ function Gallery() {
   };
 
   // Handle arrow key navigation
-  React.useEffect(() => {
+  useEffect(() => {
     const handleArrowKeys = (e) => {
       if (!isModalOpen) return;
       
@@ -119,6 +149,36 @@ function Gallery() {
     document.addEventListener('keydown', handleArrowKeys);
     return () => document.removeEventListener('keydown', handleArrowKeys);
   }, [isModalOpen, selectedImage, filteredImages]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen py-8 sm:py-12 px-4 sm:px-6 lg:px-8 pt-30 sm:pt-32">
+        <div className="max-w-7xl mx-auto text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-amber-500 mx-auto"></div>
+          <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">Loading gallery...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen py-8 sm:py-12 px-4 sm:px-6 lg:px-8 pt-30 sm:pt-32">
+        <div className="max-w-7xl mx-auto text-center">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            <p className="font-bold">Error</p>
+            <p>{error}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="mt-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen py-8 sm:py-12 px-4 sm:px-6 lg:px-8 pt-30 sm:pt-32">
@@ -157,20 +217,20 @@ function Gallery() {
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 text-center">
             <div className="bg-white/5 rounded-lg p-3 sm:p-4 border border-amber-500/20">
-              <div className="text-xl sm:text-2xl font-bold text-amber-400">{imageDatabase.length}</div>
-              <div className="text-gray-400 text-xs sm:text-sm">Total Images</div>
+                          <div className="text-xl sm:text-2xl font-bold text-amber-400">{images.length}</div>
+            <div className="text-gray-400 text-xs sm:text-sm">Total Images</div>
             </div>
             <div className="bg-white/5 rounded-lg p-3 sm:p-4 border border-amber-500/20">
               <div className="text-xl sm:text-2xl font-bold text-amber-400">{categories.length - 1}</div>
               <div className="text-gray-400 text-xs sm:text-sm">Categories</div>
             </div>
             <div className="bg-white/5 rounded-lg p-3 sm:p-4 border border-amber-500/20">
-              <div className="text-xl sm:text-2xl font-bold text-amber-400">{imageDatabase.filter(img => img.featured).length}</div>
+              <div className="text-xl sm:text-2xl font-bold text-amber-400">{images.filter(img => img.featured).length}</div>
               <div className="text-gray-400 text-xs sm:text-sm">Featured</div>
             </div>
             <div className="bg-white/5 rounded-lg p-3 sm:p-4 border border-amber-500/20">
-              <div className="text-xl sm:text-2xl font-bold text-amber-400">{new Set(imageDatabase.flatMap(img => img.tags)).size}</div>
-              <div className="text-gray-400 text-xs sm:text-sm">Unique Tags</div>
+                          <div className="text-xl sm:text-2xl font-bold text-amber-400">{new Set(images.flatMap(img => img.tags)).size}</div>
+            <div className="text-gray-400 text-xs sm:text-sm">Unique Tags</div>
             </div>
           </div>
         </div>
@@ -199,9 +259,10 @@ function Gallery() {
                 onChange={handleCategoryChange}
                 style={{ color: 'white' }}
               >
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name} ({category.count})
+                <option value="all">All Categories</option>
+                {categories.map((category, index) => (
+                  <option key={index} value={category}>
+                    {category}
                   </option>
                 ))}
               </select>
@@ -222,7 +283,7 @@ function Gallery() {
         {/* Results Count */}
         <div className="mb-4 sm:mb-6">
           <p className="text-gray-400 text-sm sm:text-base">
-            Showing {filteredImages.length} of {imageDatabase.length} images
+            Showing {filteredImages.length} of {images.length} images
             {searchTerm && ` matching "${searchTerm}"`}
             {selectedCategory !== "all" && ` in ${categories.find(c => c.id === selectedCategory)?.name}`}
           </p>
