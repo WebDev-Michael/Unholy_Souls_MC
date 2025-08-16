@@ -85,12 +85,32 @@ const requireAdmin = (req, res, next) => {
 };
 
 // Health check endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({ 
-    status: 'OK', 
-    message: 'Unholy Souls MC Backend is running',
-    timestamp: new Date().toISOString()
-  });
+app.get('/health', async (req, res) => {
+  try {
+    // Check database connectivity
+    let dbStatus = 'unknown';
+    try {
+      await sequelize.authenticate();
+      dbStatus = 'connected';
+    } catch {
+      dbStatus = 'disconnected';
+    }
+
+    res.status(200).json({ 
+      status: 'OK', 
+      message: 'Unholy Souls MC Backend is running',
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development',
+      database: dbStatus,
+      uptime: process.uptime()
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      status: 'ERROR', 
+      message: 'Health check failed',
+      error: error.message 
+    });
+  }
 });
 
 // Authentication routes
@@ -645,13 +665,42 @@ app.use((error, req, res) => {
 // Start server
 const startServer = async () => {
   try {
-    // Test database connection
-    await sequelize.authenticate();
-    console.log('✅ Database connection has been established successfully.');
-    
-    // Sync database (for development - creates tables if they don't exist)
-    await sequelize.sync({ force: false });
-    console.log('✅ Database synchronized successfully.');
+    // Test database connection with retry logic for production
+    let dbConnected = false;
+    let retryCount = 0;
+    const maxRetries = 5;
+    const retryDelay = 5000; // 5 seconds
+
+    while (!dbConnected && retryCount < maxRetries) {
+      try {
+        await sequelize.authenticate();
+        console.log('✅ Database connection has been established successfully.');
+        dbConnected = true;
+      } catch (error) {
+        retryCount++;
+        console.log(`❌ Database connection attempt ${retryCount} failed:`, error.message);
+        
+        if (retryCount < maxRetries) {
+          console.log(`🔄 Retrying in ${retryDelay/1000} seconds... (${retryCount}/${maxRetries})`);
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
+        } else {
+          console.log('❌ Max retries reached. Starting server without database sync.');
+          break;
+        }
+      }
+    }
+
+    // Only sync database if we have a connection
+    if (dbConnected) {
+      try {
+        await sequelize.sync({ force: false });
+        console.log('✅ Database synchronized successfully.');
+      } catch (syncError) {
+        console.log('⚠️ Database sync failed, but continuing with server startup:', syncError.message);
+      }
+    } else {
+      console.log('⚠️ Starting server without database connection. Some features may not work.');
+    }
     
     app.listen(PORT, () => {
       console.log(`🚀 Unholy Souls MC Backend server running on port ${PORT}`);
