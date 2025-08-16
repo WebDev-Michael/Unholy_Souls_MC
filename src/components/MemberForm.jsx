@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 
 function MemberForm({ member, onSave, onCancel, chapters, ranks, isEditing = false }) {
+  // Debug logging for ranks and chapters data
+  console.log('🔍 MemberForm received ranks:', ranks);
+  console.log('🔍 MemberForm received chapters:', chapters);
+  
   // Fallback ranks array to ensure all required ranks are always available
   const fallbackRanks = [
     { rank: 'Prospect' },
@@ -17,7 +21,7 @@ function MemberForm({ member, onSave, onCancel, chapters, ranks, isEditing = fal
   ];
 
   // Use provided ranks or fallback to ensure all ranks are available
-  const availableRanks = ranks && fallbackRanks;
+  const availableRanks = ranks && ranks.length > 0 ? ranks : fallbackRanks;
 
   // Fallback chapters array to ensure all required chapters are always available
   const fallbackChapters = [
@@ -27,7 +31,11 @@ function MemberForm({ member, onSave, onCancel, chapters, ranks, isEditing = fal
   ];
 
   // Use provided chapters or fallback to ensure all chapters are available
-  const availableChapters = chapters && fallbackChapters;
+  const availableChapters = chapters && chapters.length > 0 ? chapters : fallbackChapters;
+  
+  // Debug logging for final arrays being used
+  console.log('🔍 Final availableRanks:', availableRanks);
+  console.log('🔍 Final availableChapters:', availableChapters);
 
   const [formData, setFormData] = useState({
     name: '',

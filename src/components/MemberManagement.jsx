@@ -16,6 +16,27 @@ function MemberManagement() {
   const [chapters, setChapters] = useState([]);
   const [ranks, setRanks] = useState([]);
 
+  // Define all available ranks and chapters as fallbacks
+  const allRanks = [
+    { rank: 'Prospect', count: 0 },
+    { rank: 'Full Patch Member', count: 0 },
+    { rank: 'Tailgunner', count: 0 },
+    { rank: 'Enforcer', count: 0 },
+    { rank: 'Warlord', count: 0 },
+    { rank: 'Treasurer', count: 0 },
+    { rank: 'Secretary', count: 0 },
+    { rank: 'Road Captain', count: 0 },
+    { rank: 'Sargeant at Arms', count: 0 },
+    { rank: 'Vice President', count: 0 },
+    { rank: 'President', count: 0 }
+  ];
+
+  const allChapters = [
+    { chapter: 'Dockside', count: 0 },
+    { chapter: 'Bay City', count: 0 },
+    { chapter: 'National', count: 0 }
+  ];
+
   // Load members and filter options
   useEffect(() => {
     const loadData = async () => {
@@ -23,17 +44,57 @@ function MemberManagement() {
         setLoading(true);
         const [membersData, ranksData, chaptersData] = await Promise.all([
           adminAPI.getMembers(),
-          membersAPI.getRanks(),
-          membersAPI.getChapters()
+          membersAPI.getRanks().catch(() => []), // Fallback to empty array if API fails
+          membersAPI.getChapters().catch(() => []) // Fallback to empty array if API fails
         ]);
         
         setMembers(membersData);
-        setRanks(ranksData);
-        setChapters(chaptersData);
+        
+        // Merge API data with fallback arrays to ensure all options are available
+        if (ranksData && ranksData.length > 0) {
+          // Create a map of existing ranks from API
+          const existingRanksMap = new Map(ranksData.map(r => [r.rank, r.count]));
+          
+          // Merge with fallback array, preserving counts where available
+          const mergedRanks = allRanks.map(fallbackRank => ({
+            rank: fallbackRank.rank,
+            count: existingRanksMap.get(fallbackRank.rank) || 0
+          }));
+          
+          console.log('🔍 API ranks data:', ranksData);
+          console.log('🔍 Merged ranks:', mergedRanks);
+          setRanks(mergedRanks);
+        } else {
+          console.log('🔍 No API ranks data, using fallback:', allRanks);
+          setRanks(allRanks);
+        }
+        
+        if (chaptersData && chaptersData.length > 0) {
+          // Create a map of existing chapters from API
+          const existingChaptersMap = new Map(chaptersData.map(c => [c.chapter, c.count]));
+          
+          // Merge with fallback array, preserving counts where available
+          const mergedChapters = allChapters.map(fallbackChapter => ({
+            chapter: fallbackChapter.chapter,
+            count: existingChaptersMap.get(fallbackChapter.chapter) || 0
+          }));
+          
+          console.log('🔍 API chapters data:', chaptersData);
+          console.log('🔍 Merged chapters:', mergedChapters);
+          setChapters(mergedChapters);
+        } else {
+          console.log('🔍 No API chapters data, using fallback:', allChapters);
+          setChapters(allChapters);
+        }
+        
         setError(null);
       } catch (err) {
         console.error('Error loading members:', err);
         setError('Failed to load members. Please try again later.');
+        
+        // Set fallback data even if there's an error
+        setRanks(allRanks);
+        setChapters(allChapters);
       } finally {
         setLoading(false);
       }
