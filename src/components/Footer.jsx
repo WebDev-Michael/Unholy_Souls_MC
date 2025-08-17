@@ -45,12 +45,14 @@ function Footer() {
               <>
                 <Link 
                   to="/admin" 
+                  onClick={scrollToTop}
                   className="text-amber-400 hover:text-amber-300 transition-colors duration-200 py-2 px-3 rounded hover:bg-gray-600/30 text-sm sm:text-base font-medium text-center"
                 >
                   Admin
                 </Link>
                 <Link 
                   to="/members" 
+                  onClick={scrollToTop}
                   className="text-amber-400 hover:text-amber-300 transition-colors duration-200 py-2 px-3 rounded hover:bg-gray-600/30 text-sm sm:text-base font-medium text-center"
                 >
                   Members
@@ -59,6 +61,7 @@ function Footer() {
             ) : (
               <Link 
                 to="/login" 
+                onClick={scrollToTop}
                 className="text-amber-400 hover:text-amber-300 transition-colors duration-200 py-2 px-3 rounded hover:bg-gray-600/30 text-sm sm:text-base font-medium text-center col-span-2 sm:col-span-1"
               >
                 Login
