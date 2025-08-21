@@ -11,11 +11,13 @@ import AdminPanel from './components/AdminPanel'
 import MemberManagement from './components/MemberManagement'
 import ProtectedRoute from './components/ProtectedRoute'
 import TestPage from './components/TestPage'
+import AuthNotification from './components/AuthNotification'
 
 function App() {
   return (
     <AuthProvider>
       <Navigation />
+      <AuthNotification />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/meetthesouls" element={<MeetTheSouls />} />

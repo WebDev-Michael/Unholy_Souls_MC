@@ -1,12 +1,18 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../hooks/useAuth'
 
 function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  
+  const { isAuthenticated, user, logout } = useAuth()
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
+  }
+
+  const handleLogout = async () => {
+    await logout()
+    setIsMenuOpen(false)
   }
 
   return (
@@ -28,6 +34,26 @@ function Navigation() {
           <Link to="/meetthesouls" className="text-white hover:text-amber-400 transition-colors duration-200">Meet the Souls</Link>
           <Link to="/gallery" className="text-white hover:text-amber-400 transition-colors duration-200">Gallery</Link>
           
+          {/* Authentication Links */}
+          {isAuthenticated ? (
+            <>
+              {user?.role === 'admin' && (
+                <Link to="/admin" className="text-white hover:text-amber-400 transition-colors duration-200">Admin</Link>
+              )}
+              <Link to="/members" className="text-white hover:text-amber-400 transition-colors duration-200">Members</Link>
+              <div className="flex items-center space-x-4">
+                <span className="text-amber-400">Welcome, {user?.username}</span>
+                <button
+                  onClick={handleLogout}
+                  className="text-white hover:text-amber-400 transition-colors duration-200"
+                >
+                  Logout
+                </button>
+              </div>
+            </>
+          ) : (
+            <Link to="/login" className="text-white hover:text-amber-400 transition-colors duration-200">Login</Link>
+          )}
         </nav>
 
         {/* Mobile Menu Button */}
@@ -86,6 +112,45 @@ function Navigation() {
             >
               Gallery
             </Link>
+            
+            {/* Mobile Authentication Links */}
+            {isAuthenticated ? (
+              <>
+                {user?.role === 'admin' && (
+                  <Link 
+                    to="/admin" 
+                    className="text-white hover:text-amber-400 transition-colors duration-200 px-2 py-2 rounded hover:bg-gray-600/50"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Admin
+                  </Link>
+                )}
+                <Link 
+                  to="/members" 
+                  className="text-white hover:text-amber-400 transition-colors duration-200 px-2 py-2 rounded hover:bg-gray-600/50"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Members
+                </Link>
+                <div className="px-2 py-2">
+                  <span className="text-amber-400">Welcome, {user?.username}</span>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="text-white hover:text-amber-400 transition-colors duration-200 px-2 py-2 rounded hover:bg-gray-600/50 text-left w-full"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link 
+                to="/login" 
+                className="text-white hover:text-amber-400 transition-colors duration-200 px-2 py-2 rounded hover:bg-gray-600/50"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Login
+              </Link>
+            )}
           </nav>
         </div>
       )}

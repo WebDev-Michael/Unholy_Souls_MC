@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import MemberForm from './MemberForm';
 import { adminAPI, membersAPI } from '../services/api';
 
@@ -16,17 +16,16 @@ function MemberManagement() {
   const [chapters, setChapters] = useState([]);
   const [ranks, setRanks] = useState([]);
 
-  // Define all available ranks and chapters as fallbacks
   const allRanks = [
     { rank: 'Prospect', count: 0 },
     { rank: 'Full Patch Member', count: 0 },
-    { rank: 'Tailgunner', count: 0 },
+    { rank: 'Tail Gunner', count: 0 },
     { rank: 'Enforcer', count: 0 },
     { rank: 'Warlord', count: 0 },
     { rank: 'Treasurer', count: 0 },
     { rank: 'Secretary', count: 0 },
     { rank: 'Road Captain', count: 0 },
-    { rank: 'Sargeant at Arms', count: 0 },
+    { rank: 'Sergeant at Arms', count: 0 },
     { rank: 'Vice President', count: 0 },
     { rank: 'President', count: 0 }
   ];
@@ -37,25 +36,21 @@ function MemberManagement() {
     { chapter: 'National', count: 0 }
   ];
 
-  // Load members and filter options
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true);
         const [membersData, ranksData, chaptersData] = await Promise.all([
           adminAPI.getMembers(),
-          membersAPI.getRanks().catch(() => []), // Fallback to empty array if API fails
-          membersAPI.getChapters().catch(() => []) // Fallback to empty array if API fails
+          membersAPI.getRanks().catch(() => []),
+          membersAPI.getChapters().catch(() => [])
         ]);
         
         setMembers(membersData);
         
-        // Merge API data with fallback arrays to ensure all options are available
         if (ranksData && ranksData.length > 0) {
-          // Create a map of existing ranks from API
           const existingRanksMap = new Map(ranksData.map(r => [r.rank, r.count]));
           
-          // Merge with fallback array, preserving counts where available
           const mergedRanks = allRanks.map(fallbackRank => ({
             rank: fallbackRank.rank,
             count: existingRanksMap.get(fallbackRank.rank) || 0
@@ -70,10 +65,8 @@ function MemberManagement() {
         }
         
         if (chaptersData && chaptersData.length > 0) {
-          // Create a map of existing chapters from API
           const existingChaptersMap = new Map(chaptersData.map(c => [c.chapter, c.count]));
           
-          // Merge with fallback array, preserving counts where available
           const mergedChapters = allChapters.map(fallbackChapter => ({
             chapter: fallbackChapter.chapter,
             count: existingChaptersMap.get(fallbackChapter.chapter) || 0
@@ -92,7 +85,6 @@ function MemberManagement() {
         console.error('Error loading members:', err);
         setError('Failed to load members. Please try again later.');
         
-        // Set fallback data even if there's an error
         setRanks(allRanks);
         setChapters(allChapters);
       } finally {
@@ -129,14 +121,12 @@ function MemberManagement() {
       console.log('🔍 Member ID:', updatedMember.id);
       console.log('🔍 Member data:', updatedMember);
       
-      // Safety check: ensure member exists and has an ID
       if (!updatedMember.id) {
         console.error('❌ No member ID provided for update');
         alert('Cannot update member: No ID provided. Please refresh and try again.');
         return;
       }
       
-      // Check if member still exists in current state
       const existingMember = members.find(m => m.id === updatedMember.id);
       if (!existingMember) {
         console.error('❌ Member no longer exists in current state');
@@ -178,7 +168,6 @@ function MemberManagement() {
     }
   };
 
-  // Filter members based on search and chapter
   const filteredMembers = members.filter(member => {
     const matchesSearch = member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (member.roadname && member.roadname.toLowerCase().includes(searchTerm.toLowerCase())) ||

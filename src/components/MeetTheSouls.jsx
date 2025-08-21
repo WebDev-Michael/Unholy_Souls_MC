@@ -18,13 +18,13 @@ function MeetTheSouls() {
   const allRanks = [
     "Prospect",
     "Full Patch Member",
-    "Tailgunner",
+    "Tail Gunner",
     "Enforcer",
     "Warlord",
     "Treasurer",
     "Secretary",
     "Road Captain",
-    "Sargeant at Arms",
+    "Sergeant at Arms",
     "Vice President",
     "President"
   ];

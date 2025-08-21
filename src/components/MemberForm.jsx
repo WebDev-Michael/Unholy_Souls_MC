@@ -9,7 +9,7 @@ function MemberForm({ member, onSave, onCancel, chapters, ranks, isEditing = fal
   const fallbackRanks = [
     { rank: 'Prospect' },
     { rank: 'Full Patch Member' },
-    { rank: 'Tailgunner' },
+    { rank: 'Tail Gunner' },
     { rank: 'Enforcer' },
     { rank: 'Warlord' },
     { rank: 'Treasurer' },

@@ -18,6 +18,35 @@ const getAuthHeaders = () => {
   };
 };
 
+// Helper function to validate token before making authenticated requests
+const validateTokenBeforeRequest = () => {
+  const token = localStorage.getItem('authToken');
+  if (!token) {
+    // Dispatch logout event if no token found
+    window.dispatchEvent(new CustomEvent('forceLogout'));
+    return false;
+  }
+  
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const currentTime = Date.now() / 1000;
+    
+    // Check if token is expired
+    if (payload.exp && payload.exp < currentTime) {
+      localStorage.removeItem('authToken');
+      window.dispatchEvent(new CustomEvent('forceLogout'));
+      return false;
+    }
+    
+    return true;
+  } catch (err) {
+    console.error('Error parsing token:', err);
+    localStorage.removeItem('authToken');
+    window.dispatchEvent(new CustomEvent('forceLogout'));
+    return false;
+  }
+};
+
 // Helper function to process Sequelize response data
 const processSequelizeResponse = (data) => {
   // Handle both single objects and arrays
@@ -183,6 +212,10 @@ export const galleryAPI = {
 export const adminAPI = {
   // Gallery Management
   getGallery: async () => {
+    if (!validateTokenBeforeRequest()) {
+      throw new Error('Authentication required');
+    }
+    
     const response = await fetch(`${API_BASE_URL}/admin/gallery`, {
       headers: getAuthHeaders()
     });
@@ -191,6 +224,10 @@ export const adminAPI = {
   },
 
   createGalleryImage: async (imageData) => {
+    if (!validateTokenBeforeRequest()) {
+      throw new Error('Authentication required');
+    }
+    
     console.log('🔍 API createGalleryImage called with data:', imageData);
     
     // Ensure all required fields are present and properly formatted
@@ -228,6 +265,10 @@ export const adminAPI = {
   },
 
   updateGalleryImage: async (id, imageData) => {
+    if (!validateTokenBeforeRequest()) {
+      throw new Error('Authentication required');
+    }
+    
     console.log('🔍 API updateGalleryImage called with ID:', id);
     console.log('🔍 API updateGalleryImage data:', imageData);
     
@@ -267,6 +308,10 @@ export const adminAPI = {
   },
 
   deleteGalleryImage: async (id) => {
+    if (!validateTokenBeforeRequest()) {
+      throw new Error('Authentication required');
+    }
+    
     const response = await fetch(`${API_BASE_URL}/admin/gallery/${id}`, {
       method: 'DELETE',
       headers: getAuthHeaders()
@@ -276,6 +321,10 @@ export const adminAPI = {
 
   // Member Management
   getMembers: async () => {
+    if (!validateTokenBeforeRequest()) {
+      throw new Error('Authentication required');
+    }
+    
     const response = await fetch(`${API_BASE_URL}/admin/members`, {
       headers: getAuthHeaders()
     });
@@ -284,6 +333,10 @@ export const adminAPI = {
   },
 
   createMember: async (memberData) => {
+    if (!validateTokenBeforeRequest()) {
+      throw new Error('Authentication required');
+    }
+    
     // Ensure data is compatible with Sequelize model
     const processedData = {
       name: memberData.name,
@@ -306,6 +359,10 @@ export const adminAPI = {
   },
 
   updateMember: async (id, memberData) => {
+    if (!validateTokenBeforeRequest()) {
+      throw new Error('Authentication required');
+    }
+    
     console.log('🔍 API updateMember called with ID:', id);
     console.log('🔍 API updateMember data:', memberData);
     
@@ -333,6 +390,10 @@ export const adminAPI = {
   },
 
   deleteMember: async (id) => {
+    if (!validateTokenBeforeRequest()) {
+      throw new Error('Authentication required');
+    }
+    
     const response = await fetch(`${API_BASE_URL}/admin/members/${id}`, {
       method: 'DELETE',
       headers: getAuthHeaders()
@@ -342,6 +403,10 @@ export const adminAPI = {
 
   // User Management
   getUsers: async () => {
+    if (!validateTokenBeforeRequest()) {
+      throw new Error('Authentication required');
+    }
+    
     const response = await fetch(`${API_BASE_URL}/admin/users`, {
       headers: getAuthHeaders()
     });
@@ -350,6 +415,10 @@ export const adminAPI = {
   },
 
   createUser: async (userData) => {
+    if (!validateTokenBeforeRequest()) {
+      throw new Error('Authentication required');
+    }
+    
     // Ensure data is compatible with Sequelize model
     const processedData = {
       username: userData.username,
@@ -370,6 +439,10 @@ export const adminAPI = {
   },
 
   updateUser: async (id, userData) => {
+    if (!validateTokenBeforeRequest()) {
+      throw new Error('Authentication required');
+    }
+    
     // Ensure data is compatible with Sequelize model
     const processedData = {
       username: userData.username,
@@ -394,6 +467,10 @@ export const adminAPI = {
   },
 
   deleteUser: async (id) => {
+    if (!validateTokenBeforeRequest()) {
+      throw new Error('Authentication required');
+    }
+    
     const response = await fetch(`${API_BASE_URL}/admin/users/${id}`, {
       method: 'DELETE',
       headers: getAuthHeaders()
