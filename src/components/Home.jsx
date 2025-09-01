@@ -7,11 +7,16 @@ function Home() {
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-4 sm:mb-5 border-b-4 border-amber-600 w-fit mx-auto px-4">
           Welcome to Unholy Souls MC
         </h1>
-        <img 
-          src='https://i.imgur.com/2cZtQxl.png' 
-          alt="Club Ride" 
-          className="rounded-lg mx-auto pb-6 sm:pb-10 w-full max-w-2xl h-auto" 
-        />
+        <div className="relative w-full aspect-video max-w-4xl mx-auto">
+          <iframe 
+            src="https://www.youtube.com/embed/WSOalfxZV4I"
+            title="YouTube video player"
+            className="absolute top-0 left-0 w-full h-full"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            referrerPolicy="strict-origin-when-cross-origin"
+            allowFullScreen
+          ></iframe>
+        </div>
         <h2 className="text-xl sm:text-2xl font-bold text-center shadow-md mt-4 sm:mt-5 mb-4 sm:mb-5 border-b-4 border-amber-600 w-fit mx-auto px-4">
           Who are we?
         </h2>
