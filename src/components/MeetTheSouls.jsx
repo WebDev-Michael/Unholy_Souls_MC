@@ -77,7 +77,7 @@ function MeetTheSouls() {
     };
 
     loadData();
-  }, []); // Only run on mount
+  }, []);
 
   // Filter members based on current filters
   const filteredMembers = members.filter(member => {
@@ -253,7 +253,7 @@ function MeetTheSouls() {
 
         {/* Call to Action */}
         <div className="text-center mt-12 sm:mt-16">
-          <div className="bg-white dark:bg-gray-700/50 rounded-lg shadow-lg p-6 sm:p-8 max-w-2xl mx-auto">
+          <div className="bg-white dark:bg-gray-700/50 rounded-lg shadow-lg p-6 sm:p-8 max-w-2xl mx-auto border-l-4 border-r-4 border-amber-600">
             <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4">
               Want to Join the Brotherhood?
             </h3>
