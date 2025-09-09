@@ -12,6 +12,22 @@ function Gallery() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Helper function to sort images: featured first, then by date
+  const sortImages = (imagesArray) => {
+    return [...imagesArray].sort((a, b) => {
+      // Check featured status - handle both 'featured' and 'isFeatured' fields
+      const aFeatured = Boolean(a.featured || a.isFeatured);
+      const bFeatured = Boolean(b.featured || b.isFeatured);
+      
+      // First, sort by featured status (featured images first)
+      if (aFeatured && !bFeatured) return -1;
+      if (!aFeatured && bFeatured) return 1;
+      
+      // If both have same featured status, sort by date (newest first)
+      return new Date(b.date) - new Date(a.date);
+    });
+  };
+
   // Load images and categories
   useEffect(() => {
     const loadData = async () => {
@@ -22,9 +38,12 @@ function Gallery() {
           galleryAPI.getCategories()
         ]);
         
-        setImages(imagesData);
+        // Sort images: featured images first, then by date (newest first)
+        const sortedImages = sortImages(imagesData);
+        
+        setImages(sortedImages);
         setCategories(categoriesData);
-        setFilteredImages(imagesData);
+        setFilteredImages(sortedImages);
         setError(null);
       } catch (err) {
         console.error('Error loading gallery:', err);
@@ -58,7 +77,10 @@ function Gallery() {
       );
     }
 
-    setFilteredImages(filtered);
+    // Sort images: featured images first, then by date (newest first)
+    const sortedFiltered = sortImages(filtered);
+
+    setFilteredImages(sortedFiltered);
   }, [images, selectedCategory, searchTerm]);
 
   // Handle search input change
@@ -223,7 +245,7 @@ function Gallery() {
               <div className="text-gray-400 text-xs sm:text-sm">Categories</div>
             </div>
             <div className="bg-white/5 rounded-lg p-3 sm:p-4 border border-amber-500/20">
-              <div className="text-xl sm:text-2xl font-bold text-amber-400">{images.filter(img => img.featured).length}</div>
+              <div className="text-xl sm:text-2xl font-bold text-amber-400">{images.filter(img => img.featured || img.isFeatured).length}</div>
               <div className="text-gray-400 text-xs sm:text-sm">Featured</div>
             </div>
             <div className="bg-white/5 rounded-lg p-3 sm:p-4 border border-amber-500/20">
@@ -305,7 +327,7 @@ function Gallery() {
                   />
                   
                   {/* Featured Badge */}
-                  {image.featured && (
+                  {(image.featured || image.isFeatured) && (
                     <div className="absolute top-2 right-2">
                       <span className="bg-gradient-to-r from-amber-500 to-orange-600 text-white text-xs px-2 py-1 rounded-full font-semibold shadow-lg">
                         Featured
