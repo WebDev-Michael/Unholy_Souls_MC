@@ -64,7 +64,7 @@ export async function up() {
 
     // Create admin user
     console.log('👤 Creating admin user...');
-    const hashedPassword = await bcrypt.hash('admin123', 10);
+    const hashedPassword = await bcrypt.hash('UnholySouls2025!', 10);
     const adminUser = await User.create({
       username: 'admin',
       email: 'admin@unholysoulsmc.com',

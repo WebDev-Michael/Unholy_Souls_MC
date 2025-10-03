@@ -5,7 +5,10 @@ import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
+import multer from 'multer';
+import { v2 as cloudinary } from 'cloudinary';
 import { sequelize, Member, GalleryImage, User } from './models/index.js';
+import './config/cloudinary.js';
 
 // Load environment variables
 dotenv.config();
@@ -55,7 +58,6 @@ const publicLimiter = rateLimit({
     return req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || 'unknown';
   },
   handler: (req, res) => {
-    const clientIP = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || 'unknown';
     res.status(429).json({ 
       error: 'Too many requests from this IP, please try again later.',
       retryAfter: Math.ceil(parseInt(process.env.RATE_LIMIT_WINDOW) / 1000 / 60) || 15
@@ -121,6 +123,26 @@ app.use((req, res, next) => {
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Multer configuration for file uploads
+const storage = multer.memoryStorage();
+const upload = multer({ 
+  storage: storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    // Check if file is an image
+    console.log('🔍 File filter - mimetype:', file.mimetype);
+    if (file.mimetype.startsWith('image/')) {
+      console.log('✅ File accepted by filter');
+      cb(null, true);
+    } else {
+      console.log('❌ File rejected by filter - not an image');
+      cb(new Error('Only image files are allowed!'), false);
+    }
+  }
+});
 
 // Simple authentication middleware
 const authenticateToken = (req, res, next) => {
@@ -338,6 +360,76 @@ app.get('/gallery/categories', async (req, res) => {
   } catch (error) {
     console.error('❌ Error fetching categories:', error);
     res.status(500).json({ error: 'Failed to fetch categories' });
+  }
+});
+
+// Cloudinary upload endpoint
+app.post('/upload', upload.single('image'), async (req, res) => {
+  try {
+    console.log('🔍 POST /upload - Request received');
+    console.log('🔍 Headers:', req.headers);
+    console.log('🔍 File:', req.file);
+    console.log('🔍 Cloudinary config check:');
+    console.log('  - Cloud Name:', process.env.CLOUDINARY_CLOUD_NAME ? 'Set' : 'Missing');
+    console.log('  - API Key:', process.env.CLOUDINARY_API_KEY ? 'Set' : 'Missing');
+    console.log('  - API Secret:', process.env.CLOUDINARY_API_SECRET ? 'Set' : 'Missing');
+    
+    if (!req.file) {
+      console.log('❌ No file provided in request');
+      return res.status(400).json({ error: 'No image file provided' });
+    }
+
+    console.log('🔍 File details:', {
+      fieldname: req.file.fieldname,
+      originalname: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+      bufferLength: req.file.buffer ? req.file.buffer.length : 'No buffer'
+    });
+
+    // Upload to Cloudinary
+    const result = await new Promise((resolve, reject) => {
+      console.log('🔍 Starting Cloudinary upload...');
+      cloudinary.uploader.upload_stream(
+        {
+          resource_type: 'auto',
+          folder: 'unholy-souls-mc', // Optional: organize images in a folder
+          transformation: [
+            { quality: 'auto' },
+            { fetch_format: 'auto' }
+          ]
+        },
+        (error, result) => {
+          if (error) {
+            console.error('❌ Cloudinary upload error:', error);
+            console.error('❌ Error details:', error.message);
+            console.error('❌ Error status:', error.http_code);
+            reject(error);
+          } else {
+            console.log('✅ Cloudinary upload successful:', result);
+            resolve(result);
+          }
+        }
+      ).end(req.file.buffer);
+    });
+
+    console.log('✅ Upload completed, sending response');
+    res.json({
+      success: true,
+      imageUrl: result.secure_url,
+      publicId: result.public_id,
+      width: result.width,
+      height: result.height,
+      format: result.format,
+      bytes: result.bytes
+    });
+  } catch (error) {
+    console.error('❌ Error uploading image:', error);
+    console.error('❌ Error stack:', error.stack);
+    res.status(500).json({ 
+      error: 'Failed to upload image',
+      details: error.message 
+    });
   }
 });
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 function MemberForm({ member, onSave, onCancel, chapters, ranks, isEditing = false }) {
   // Debug logging for ranks and chapters data
@@ -45,6 +45,10 @@ function MemberForm({ member, onSave, onCancel, chapters, ranks, isEditing = fal
     bio: '',
     image: ''
   });
+  const [isUploading, setIsUploading] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState('');
 
   // Monitor form data changes for debugging
   useEffect(() => {
@@ -86,7 +90,67 @@ function MemberForm({ member, onSave, onCancel, chapters, ranks, isEditing = fal
     }));
   };
 
-  const handleSubmit = (e) => {
+  // Handle file selection
+  const handleFileSelect = (file) => {
+    if (file && file.type.startsWith('image/')) {
+      setSelectedFile(file);
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+      setFormData(prev => ({ ...prev, image: '' })); // Clear URL input when file is selected
+    } else {
+      alert('Please select a valid image file.');
+    }
+  };
+
+  // Handle file input change
+  const handleFileInputChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      handleFileSelect(file);
+    }
+  };
+
+  // Handle drag and drop
+  const handleDragOver = useCallback((e) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  }, []);
+
+  const handleDrop = useCallback((e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      handleFileSelect(files[0]);
+    }
+  }, []);
+
+  // Upload file to Cloudinary
+  const uploadToCloudinary = async (file) => {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    const response = await fetch(`${API_BASE_URL}/upload`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Upload failed');
+    }
+
+    return response.json();
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     console.log('🔍 Form submission started');
@@ -101,30 +165,89 @@ function MemberForm({ member, onSave, onCancel, chapters, ranks, isEditing = fal
       return;
     }
 
-    // Clean up the data
-    const cleanedData = {
-      ...formData,
-      name: formData.name.trim(),
-      roadname: formData.roadname.trim() || null, // Convert empty string to null
-      bio: formData.bio.trim(),
-      image: formData.image.trim() || null // Convert empty string to null
-    };
-
-    // If editing, ALWAYS preserve the ID from multiple sources
-    if (isEditing && member && member.id) {
-      cleanedData.id = member.id;
-      console.log('✅ Preserving member ID for edit from member object:', member.id);
-    } else if (isEditing && formData.id) {
-      cleanedData.id = formData.id;
-      console.log('✅ Preserving member ID for edit from form data:', formData.id);
-    } else if (isEditing) {
-      console.log('⚠️ No member ID found - isEditing:', isEditing, 'member:', member, 'formData.id:', formData.id);
-      alert('Cannot update member: No ID found. Please refresh and try again.');
-      return;
+    // Check if we have either a file or URL for image
+    if (!selectedFile && !formData.image) {
+      // No image provided, that's okay - it's optional
     }
 
-    console.log('🔍 Final cleanedData being submitted:', cleanedData);
-    onSave(cleanedData);
+    let imageUrl = formData.image;
+
+    // Validate URL format only if no file is selected and URL is provided
+    if (!selectedFile && formData.image) {
+      try {
+        const url = new URL(formData.image);
+        
+        // Check if it's likely a search result URL (Google, Bing, etc.)
+        if (url.hostname.includes('google.com') || 
+            url.hostname.includes('bing.com') || 
+            url.hostname.includes('yahoo.com') ||
+            url.pathname.includes('search') ||
+            url.pathname.includes('imgres')) {
+          alert('Please use a direct image URL, not a search result page.\n\nExamples of valid image URLs:\n• https://i.imgur.com/example.jpg\n• https://example.com/image.png\n• https://picsum.photos/800/600');
+          return;
+        }
+        
+        // Check if it looks like an image URL
+        const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'];
+        const hasImageExtension = imageExtensions.some(ext => 
+          url.pathname.toLowerCase().includes(ext) || 
+          url.searchParams.toString().toLowerCase().includes(ext)
+        );
+        
+        if (!hasImageExtension && !url.pathname.includes('image') && !url.pathname.includes('photo')) {
+          alert('This URL doesn\'t appear to be a direct image link. Please use a URL that points directly to an image file.\n\nExamples:\n• https://i.imgur.com/example.jpg\n• https://example.com/image.png');
+          return;
+        }
+        
+      } catch {
+        alert('Please enter a valid URL starting with http:// or https://');
+        return;
+      }
+    }
+
+    setIsUploading(true);
+    try {
+      // Upload file to Cloudinary if we have a selected file
+      if (selectedFile) {
+        const uploadResult = await uploadToCloudinary(selectedFile);
+        imageUrl = uploadResult.imageUrl;
+      }
+
+      // Clean up the data
+      const cleanedData = {
+        ...formData,
+        name: formData.name.trim(),
+        roadname: formData.roadname.trim() || null, // Convert empty string to null
+        bio: formData.bio.trim(),
+        image: imageUrl || null // Use uploaded URL or provided URL
+      };
+
+      // If editing, ALWAYS preserve the ID from multiple sources
+      if (isEditing && member && member.id) {
+        cleanedData.id = member.id;
+        console.log('✅ Preserving member ID for edit from member object:', member.id);
+      } else if (isEditing && formData.id) {
+        cleanedData.id = formData.id;
+        console.log('✅ Preserving member ID for edit from form data:', formData.id);
+      } else if (isEditing) {
+        console.log('⚠️ No member ID found - isEditing:', isEditing, 'member:', member, 'formData.id:', formData.id);
+        alert('Cannot update member: No ID found. Please refresh and try again.');
+        return;
+      }
+
+      console.log('🔍 Final cleanedData being submitted:', cleanedData);
+      onSave(cleanedData);
+      
+      // Reset file selection after successful save
+      setSelectedFile(null);
+      setPreviewUrl('');
+      
+    } catch (error) {
+      console.error('Upload failed:', error);
+      alert('Upload failed. Please try again.');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (
@@ -223,22 +346,92 @@ function MemberForm({ member, onSave, onCancel, chapters, ranks, isEditing = fal
           />
         </div>
 
-        {/* Image URL */}
+        {/* Image Upload Section */}
         <div>
           <label className="block text-amber-300 text-sm font-medium mb-2">
-            Profile Image URL
+            Profile Image
           </label>
-          <input
-            type="url"
-            name="image"
-            value={formData.image || ''}
-            onChange={handleInputChange}
-            className="w-full px-3 py-2 bg-gray-700/60 border border-amber-500/30 rounded-lg text-white placeholder-gray-400 focus:border-amber-500/50 focus:outline-none"
-            placeholder="https://example.com/image.jpg (optional)"
-          />
-          <p className="text-xs text-gray-400 mt-1">
-            Leave empty if no image is available
-          </p>
+          
+          {/* Drag and Drop Area */}
+          <div
+            className={`relative border-2 border-dashed rounded-lg p-6 text-center transition-colors duration-200 ${
+              isDragOver
+                ? 'border-amber-500 bg-amber-500/10'
+                : 'border-amber-500/30 hover:border-amber-500/50'
+            }`}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
+            {previewUrl ? (
+              <div className="space-y-4">
+                <img
+                  src={previewUrl}
+                  alt="Preview"
+                  className="max-h-48 mx-auto rounded-lg border border-amber-500/30"
+                />
+                <div className="text-amber-300 text-sm">
+                  <p className="font-medium">{selectedFile?.name}</p>
+                  <p className="text-xs text-gray-400">
+                    {(selectedFile?.size / 1024 / 1024).toFixed(2)} MB
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedFile(null);
+                    setPreviewUrl('');
+                  }}
+                  className="text-red-400 hover:text-red-300 text-sm underline"
+                >
+                  Remove Image
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="w-16 h-16 mx-auto bg-amber-500/20 rounded-full flex items-center justify-center">
+                  <svg className="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-amber-300 font-medium">Drop your image here</p>
+                  <p className="text-gray-400 text-sm">or click to browse</p>
+                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileInputChange}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
+              </div>
+            )}
+          </div>
+          
+          {/* OR Divider */}
+          <div className="flex items-center my-4">
+            <div className="flex-1 border-t border-gray-600"></div>
+            <span className="px-3 text-gray-400 text-sm">OR</span>
+            <div className="flex-1 border-t border-gray-600"></div>
+          </div>
+          
+          {/* Image URL Input */}
+          <div>
+            <label className="block text-amber-300 text-sm font-medium mb-2">
+              Image URL
+            </label>
+            <input
+              type="url"
+              name="image"
+              value={formData.image || ''}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 bg-gray-700/60 border border-amber-500/30 rounded-lg text-white placeholder-gray-400 focus:border-amber-500/50 focus:outline-none"
+              placeholder="https://example.com/image.jpg (optional)"
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              Enter a direct image URL or upload a file above
+            </p>
+          </div>
         </div>
 
         {/* Action Buttons */}
@@ -252,9 +445,10 @@ function MemberForm({ member, onSave, onCancel, chapters, ranks, isEditing = fal
           </button>
           <button
             type="submit"
-            className="px-6 py-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white rounded-lg transition-all duration-200 font-medium"
+            disabled={isUploading}
+            className="px-6 py-2 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white rounded-lg transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isEditing ? 'Save Changes' : 'Add Member'}
+            {isUploading ? 'Uploading...' : (isEditing ? 'Save Changes' : 'Add Member')}
           </button>
         </div>
       </form>
