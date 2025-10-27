@@ -50,16 +50,16 @@ function Home() {
       <section className="flex flex-col sm:flex-row items-center justify-center pb-8 sm:pb-10 gap-4 sm:gap-6">
         <div className="pt-4 sm:pt-5 w-full sm:w-2/5 mx-auto bg-gray-600/50 rounded-lg p-4 sm:p-5 border-b-4 border-l-4 border-amber-600">
           <img 
-            src="https://imgur.com/bbeSsja.png" 
-            alt="BStar Logo" 
+            src="https://res.cloudinary.com/ddzyxgkrc/image/upload/v1761586563/escape_zuoybu.jpg" 
+            alt="Escape Logo" 
             className="rounded-lg max-w-[200px] max-h-[200px] mx-auto"
           />
           <p className="text-sm sm:text-base">Located in the South of Los Santos, the <span className="font-bold text-amber-600">Unholy Souls Dockside Chapter</span> bring about a new era of excitement to the city. A 1% MC like no other the city has seen before. We are known for our brotherhood and loyalty to one another. We are known for our respect for the patch and the club. And we are known for ending a fight, but never starting it. We keep to ourselves and keep to our business.</p>
         </div>
         <div className="pt-4 sm:pt-5 w-full sm:w-2/5 mx-auto bg-gray-600/50 rounded-lg p-4 sm:p-5 border-b-4 border-r-4 border-amber-600">
         <img 
-            src="https://imgur.com/vZYbKq2.png" 
-            alt="Outkast Logo" 
+            src="https://res.cloudinary.com/ddzyxgkrc/image/upload/v1761586564/elyxir_guhw5e.png" 
+            alt="Elyxir Logo" 
             className="rounded-4xl max-w-[200px] max-h-[200px] mx-auto"
           />
           <p className="text-sm sm:text-base"><span className="font-bold text-amber-600">Bay City</span>. The original chapter started March 20th 2023 by our founding members, The glory and history behind it is tales of legend. These days its a flourishing Chapter in Grapeseed outside of the hustle and bustle of the city proper. Known for its brotherhood and prestige as well as a respectable hub for the diamond win or lose! Nobody knows our business and it stays that way.</p>
