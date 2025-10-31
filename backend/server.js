@@ -19,8 +19,19 @@ const PORT = process.env.PORT || 5000;
 // Trust proxy for Render deployment (fixes X-Forwarded-For header issues)
 app.set('trust proxy', 1);
 
-// Security middleware
-app.use(helmet());
+// Security middleware - configure Helmet to not interfere with CORS
+app.use(helmet({
+  crossOriginEmbedderPolicy: false,
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:", "http:"],
+    },
+  },
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 
 // CORS configuration
 const corsOrigins = [
@@ -28,22 +39,57 @@ const corsOrigins = [
   'http://localhost:5174', // Current frontend port
   'http://localhost:5175', // Alternative Vite port
   'http://localhost:3000', // Alternative React port
+  'http://localhost:5176', // Additional Vite port
+  'http://localhost:5177', // Additional Vite port
   'https://unholy-souls-mc-frontend.onrender.com' // Render frontend
 ];
 
-// Add custom frontend URL from environment if provided
+// Add custom frontend URL from environment variables (check both common names)
 if (process.env.FRONTEND_URL) {
   corsOrigins.push(process.env.FRONTEND_URL);
 }
+if (process.env.CORS_ORIGIN && process.env.CORS_ORIGIN !== 'https://your-frontend-domain.onrender.com') {
+  corsOrigins.push(process.env.CORS_ORIGIN);
+}
 
-console.log('🔍 CORS Origins:', corsOrigins);
-
-app.use(cors({
-  origin: corsOrigins,
+// In development, allow all localhost origins to prevent CORS issues
+const isDevelopment = process.env.NODE_ENV !== 'production';
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, Postman, or same-origin requests)
+    if (!origin) {
+      return callback(null, true);
+    }
+    
+    // In development, allow all localhost origins
+    if (isDevelopment && origin.includes('localhost')) {
+      return callback(null, true);
+    }
+    
+    // In production, check against allowed origins
+    // Also allow any *.onrender.com subdomain in case of custom domains
+    const isAllowed = corsOrigins.includes(origin) || 
+                     (origin.includes('.onrender.com') && origin.startsWith('https://'));
+    
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      console.log('❌ CORS blocked origin:', origin);
+      console.log('❌ Allowed origins:', corsOrigins);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Content-Type'],
+  optionsSuccessStatus: 200 // Some legacy browsers (IE11, various SmartTVs) choke on 204
+};
+
+console.log('🔍 CORS Origins:', corsOrigins);
+console.log('🔍 CORS Development Mode:', isDevelopment);
+
+app.use(cors(corsOptions));
 
 // Rate limiting - More permissive for public endpoints, stricter for admin/auth
 const publicLimiter = rateLimit({

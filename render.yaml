@@ -12,8 +12,10 @@ services:
         value: 10000
       - key: JWT_SECRET
         generateValue: true
+      - key: FRONTEND_URL
+        value: https://unholy-souls-mc-frontend.onrender.com
       - key: CORS_ORIGIN
-        value: https://your-frontend-domain.onrender.com
+        value: https://unholy-souls-mc-frontend.onrender.com
       - key: DB_HOST
         fromDatabase:
           name: unholy-souls-mc-db
