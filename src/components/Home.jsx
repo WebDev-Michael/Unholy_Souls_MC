@@ -50,11 +50,11 @@ function Home() {
       <section className="flex flex-col sm:flex-row items-center justify-center pb-8 sm:pb-10 gap-4 sm:gap-6">
         <div className="pt-4 sm:pt-5 w-full sm:w-2/5 mx-auto bg-gray-600/50 rounded-lg p-4 sm:p-5 border-b-4 border-l-4 border-amber-600">
           <img 
-            src="https://res.cloudinary.com/ddzyxgkrc/image/upload/v1771539632/Lv4_svcffe.png" 
-            alt="Limitless Logo" 
+            src="https://imgur.com/bbeSsja.png" 
+            alt="BStar Logo" 
             className="rounded-lg max-w-[200px] max-h-[200px] mx-auto"
           />
-          <p className="text-sm sm:text-base">Located in the North of Los Santos, the <span className="font-bold text-amber-600">Unholy Souls Dockside Chapter</span> bring about a new era of excitement to the city. A 1% MC like no other the city has seen before. We are known for our brotherhood and loyalty to one another. We are known for our respect for the patch and the club. And we are known for ending a fight, but never starting it. We keep to ourselves and keep to our business.</p>
+          <p className="text-sm sm:text-base">Located in South Los Santos, the <span className="font-bold text-amber-600">Unholy Souls</span> bring about a new era of excitement to the city. A 1% MC like no other the city has seen before. We are known for our brotherhood and loyalty to one another. We are known for our respect for the patch and the club. And we are known for ending a fight, but never starting it. We keep to ourselves and keep to our business.</p>
         </div>
         {/* <div className="pt-4 sm:pt-5 w-full sm:w-2/5 mx-auto bg-gray-600/50 rounded-lg p-4 sm:p-5 border-b-4 border-r-4 border-amber-600">
         <img 
